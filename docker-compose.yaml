@@ -1,0 +1,73 @@
+version: '3.5'
+
+services:
+    auth:
+      container_name: auth
+      build: ./auth
+      depends_on:
+        - db_auth
+      ports:
+        - ${auth_port}:${auth_port}
+      networks:
+        - server_net
+      environment:
+        PORT: ${auth_port}
+        SK: ${sk}
+        DB_HOST_ADDRESS: db_auth
+        DB_PORT: ${db_port_auth}
+        DB_USERNAME: ${db_user_auth}
+        DB_PASSWORD: ${db_password_auth}
+        DB_SSL: ${db_use_ssl}
+        ACCESS_TOKEN_LIFE: 100
+        REFRESH_TOKEN_LIFE: 200
+#  sk=secret_key
+# auth_port=4400
+
+
+# db_port_auth=4300
+# db_password_auth=asli
+# db_user_auth=asli
+# db_name_auth=postgres
+# db_user_ssl=false
+
+    db_auth:
+      container_name: db_auth
+      ports:
+        - ${db_port_auth}:${db_port_auth}
+      environment:
+        POSTGRES_USER: ${db_user_auth}
+        POSTGRES_PASSWORD: ${db_password_auth}
+      image: postgres:15-alpine
+      command:
+        - 'postgres'
+        - '-c'
+        - 'port=${db_port_auth}'
+      volumes:
+        - db_auth_vol:/var/lib/postgres/data
+      networks:
+        - server_net
+    db_chats:
+      container_name: db_chats
+      ports:
+        - ${db_port_chats}:${db_port_chats}
+      environment:
+        POSTGRES_USER: ${db_user_chats}
+        POSTGRES_PASSWORD: ${db_password_chats}
+      image: postgres:15-alpine
+      command:
+        - 'postgres'
+        - '-c'
+        - 'port=${db_port_chats}'
+      volumes:
+        - db_chats_vol:/var/lib/postgres/data
+      networks:
+        - server_net
+
+
+
+volumes:
+    db_auth_vol: {}
+    db_chats_vol: {}
+networks:
+    server_net:
+      driver: bridge

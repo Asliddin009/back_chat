@@ -46,6 +46,8 @@ services:
         - db_auth_vol:/var/lib/postgres/data
       networks:
         - server_net
+
+
     db_chats:
       container_name: db_chats
       ports:

@@ -70,7 +70,7 @@ services:
         DB_PASSWORD: ${db_password_chats}
         DB_SSL: ${db_use_ssl}
     
-    nginx:
+    envoy:
       container_name: nginx
       ports:
         - 8500:8500
@@ -79,13 +79,26 @@ services:
         - chats
       networks:
         - server_net
-      build: ./nginx
-      
+      build: ./envoy
+    
+    minio:
+      image: bitnami/minio:2023.5.18
+      container_name: minio
+      environment:
+        - MINIO_ROOT_USER=${FILES_ACCESS_KEY}
+        - MINIO_ROOT_PASSWORD=${FILES_SECRET_KEY}
+      ports:
+        - 9001:9001
+      networks:
+        - server_net
+      volumes:
+        - s3_vol:/data
 
 
 volumes:
     db_auth_vol: {}
     db_chats_vol: {}
+    s3_vol: {}
 networks:
     server_net:
       driver: bridge

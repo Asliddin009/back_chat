@@ -21,7 +21,7 @@ abstract class Utils {
   }
 
   static getIdFromMetadata(ServiceCall serviceCall) {
-    final accessToken = serviceCall.clientMetadata?['access_token'] ?? "";
+    final accessToken = serviceCall.clientMetadata?['token'] ?? "";
     return getIdFromToken(accessToken);
   }
 
@@ -30,5 +30,15 @@ abstract class Utils {
         id: user.id.toString(),
         username: user.username.toString(),
         email: user.email.toString());
+  }
+
+  static ListUserDto parseUsers(List<UserView> users) {
+    try {
+      return ListUserDto(
+          users: [...users.map((user) => getUserDtoFromUserVeiw(user))]);
+    } catch (error) {
+      throw GrpcError.internal("Ошибка в методе parseUsers");
+      //return ListUserDto(users: []);
+    }
   }
 }

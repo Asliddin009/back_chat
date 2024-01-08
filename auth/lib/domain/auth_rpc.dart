@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:isolate';
 
 import 'package:auth/data/db.dart';
 import 'package:auth/data/user/user.dart';
@@ -112,5 +113,17 @@ class AuthRpc extends AuthRpcServiceBase {
     return TokensDto(
         accessToken: issueJwtHS256(accessTokenSet, Env.sk),
         refreshToken: issueJwtHS256(refreshTokenSet, Env.sk));
+  }
+
+  @override
+  Future<ListUserDto> findUser(ServiceCall call, FindDto request) async {
+    final offset = int.tryParse(request.offset) ?? 0;
+    final limit = int.tryParse(request.limit) ?? 100;
+    final key = request.key;
+    if (key.isEmpty) return ListUserDto(users: []);
+    final query = "username LIKE '%$key%'";
+    final listUsers = await db.users.queryUsers(QueryParams(
+        limit: limit, offset: offset, orderBy: 'username', where: query));
+    return await Isolate.run(() => Utils.parseUsers(listUsers));
   }
 }

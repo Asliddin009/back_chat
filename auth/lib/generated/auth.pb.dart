@@ -13,6 +13,128 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+class ListUserDto extends $pb.GeneratedMessage {
+  factory ListUserDto({
+    $core.Iterable<UserDto>? users,
+  }) {
+    final $result = create();
+    if (users != null) {
+      $result.users.addAll(users);
+    }
+    return $result;
+  }
+  ListUserDto._() : super();
+  factory ListUserDto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ListUserDto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ListUserDto', createEmptyInstance: create)
+    ..pc<UserDto>(1, _omitFieldNames ? '' : 'users', $pb.PbFieldType.PM, subBuilder: UserDto.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ListUserDto clone() => ListUserDto()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ListUserDto copyWith(void Function(ListUserDto) updates) => super.copyWith((message) => updates(message as ListUserDto)) as ListUserDto;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListUserDto create() => ListUserDto._();
+  ListUserDto createEmptyInstance() => create();
+  static $pb.PbList<ListUserDto> createRepeated() => $pb.PbList<ListUserDto>();
+  @$core.pragma('dart2js:noInline')
+  static ListUserDto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ListUserDto>(create);
+  static ListUserDto? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<UserDto> get users => $_getList(0);
+}
+
+class FindDto extends $pb.GeneratedMessage {
+  factory FindDto({
+    $core.String? key,
+    $core.String? limit,
+    $core.String? offset,
+  }) {
+    final $result = create();
+    if (key != null) {
+      $result.key = key;
+    }
+    if (limit != null) {
+      $result.limit = limit;
+    }
+    if (offset != null) {
+      $result.offset = offset;
+    }
+    return $result;
+  }
+  FindDto._() : super();
+  factory FindDto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory FindDto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'FindDto', createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'key')
+    ..aOS(2, _omitFieldNames ? '' : 'limit')
+    ..aOS(3, _omitFieldNames ? '' : 'offset')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  FindDto clone() => FindDto()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  FindDto copyWith(void Function(FindDto) updates) => super.copyWith((message) => updates(message as FindDto)) as FindDto;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FindDto create() => FindDto._();
+  FindDto createEmptyInstance() => create();
+  static $pb.PbList<FindDto> createRepeated() => $pb.PbList<FindDto>();
+  @$core.pragma('dart2js:noInline')
+  static FindDto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FindDto>(create);
+  static FindDto? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get key => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set key($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKey() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get limit => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set limit($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasLimit() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLimit() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get offset => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set offset($core.String v) { $_setString(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasOffset() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearOffset() => clearField(3);
+}
+
 enum UserDto_OptionalPassword {
   password, 
   notSet

@@ -14,15 +14,22 @@ abstract class Utils {
   }
 
   static int getIdFromMetadata(ServiceCall call) {
-    final accessToken = call.clientMetadata?['access_token'] ?? "";
-    return getIdFromToken(accessToken);
+    try {
+      final accessToken = call.clientMetadata?['token'] ?? "";
+      return getIdFromToken(accessToken);
+    } catch (e) {
+      throw GrpcError.unauthenticated("Токен не валидный");
+    }
   }
 
   static ListChatsDto parseChats(List<ShortChatView> list) {
     try {
       return ListChatsDto(chats: [
         ...list.map((chat) => ChatDto(
-            authorId: chat.authorId, id: chat.id.toString(), name: chat.name))
+            authorId: chat.authorId,
+            memberId: chat.memberId,
+            id: chat.id.toString(),
+            name: chat.name))
       ]);
     } catch (e) {
       rethrow;
@@ -33,6 +40,7 @@ abstract class Utils {
     try {
       return ChatDto(
           authorId: chatView.authorId,
+          memberId: chatView.memberId,
           id: chatView.id.toString(),
           name: chatView.name,
           messages: [

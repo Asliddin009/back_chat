@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:isolate';
 
 import 'package:chats/data/chat/chat.dart';
@@ -6,18 +7,26 @@ import 'package:chats/data/message/message.dart';
 import 'package:chats/generated/chats.pbgrpc.dart';
 import 'package:chats/utils.dart';
 import 'package:grpc/grpc.dart';
+import 'package:protobuf/protobuf.dart';
 import 'package:stormberry/stormberry.dart';
 
 class ChatRpc extends ChatsRpcServiceBase {
+  final StreamController<MessageDto> streamController =
+      StreamController.broadcast();
   @override
   Future<ResponseDto> createChat(ServiceCall call, ChatDto request) async {
     final id = Utils.getIdFromMetadata(call);
     if (request.name.isEmpty) {
       throw GrpcError.invalidArgument("Название чата не валидное");
     }
-    //if (request.memberId.)
-    await db.chats.insertOne(
-        ChatInsertRequest(name: request.name, authorId: id.toString()));
+    if (request.memberId.isEmpty) {
+      throw GrpcError.invalidArgument("id других участников не найдено");
+    }
+
+    await db.chats.insertOne(ChatInsertRequest(
+        name: request.name,
+        authorId: id.toString(),
+        memberId: request.memberId));
     return ResponseDto(message: "Чат успешно создан");
   }
 
@@ -46,20 +55,26 @@ class ChatRpc extends ChatsRpcServiceBase {
   }
 
   @override
-  Stream<MessageDto> listenChat(ServiceCall call, ChatDto request) {
-    // TODO: implement listenChat
-    throw UnimplementedError();
+  Stream<MessageDto> listenChat(ServiceCall call, ChatDto request) async* {
+    if (request.id.isEmpty) {
+      throw GrpcError.invalidArgument("Чат не найден");
+    }
+    yield* streamController.stream.where((event) => event.chatId == request.id);
   }
 
   @override
   Future<ResponseDto> sendMessage(ServiceCall call, MessageDto request) async {
-    final chatId = call.clientMetadata?["chat_id"] ?? " ";
+    //final chatId = call.clientMetadata?["chat_id"] ?? " ";
+    final chatId = request.chatId;
     if (chatId.isEmpty) throw GrpcError.notFound("Id чата не найден");
     final authorId = Utils.getIdFromMetadata(call);
     final body = request.body;
     if (body.isEmpty) throw GrpcError.notFound("тело сообщения не найден");
-    await db.messages.insertOne(MessageInsertRequest(
+    final id = await db.messages.insertOne(MessageInsertRequest(
         body: body, chatId: int.parse(chatId), authorId: authorId.toString()));
+    streamController.add(request.deepCopy()
+      ..authorId = authorId.toString()
+      ..id = id.toString());
     return ResponseDto(message: "Успешно");
   }
 
@@ -68,8 +83,8 @@ class ChatRpc extends ChatsRpcServiceBase {
       ServiceCall call, RequestDto request) async {
     final id = Utils.getIdFromMetadata(call);
 
-    final listChats =
-        await db.chats.queryShortViews(QueryParams(where: "author_id='$id'"));
+    final listChats = await db.chats.queryShortViews(
+        QueryParams(where: "author_id='$id' OR member_id='$id'"));
     if (listChats.isEmpty) return ListChatsDto(chats: []);
     return await Isolate.run(() => Utils.parseChats(listChats));
   }
@@ -81,7 +96,8 @@ class ChatRpc extends ChatsRpcServiceBase {
     final chat = await db.chats.queryFullView(chatId);
     if (chat == null) throw GrpcError.notFound("Чат не найден");
     final authorId = Utils.getIdFromMetadata(call);
-    if (chat.authorId == authorId.toString()) {
+    if (chat.authorId == authorId.toString() ||
+        chat.memberId == authorId.toString()) {
       return await Isolate.run(() => Utils.parseChat(chat));
     } else {
       throw GrpcError.permissionDenied("Доступ запрещен");

@@ -9,7 +9,7 @@ abstract class GrpcIntercetors {
       ServiceCall call, ServiceMethod serviceMethod) {
     _ckeckDatabase();
     try {
-      final token = call.clientMetadata?['access_token'] ?? "";
+      final token = call.clientMetadata?['token'] ?? "";
       final jwtClaim = verifyJwtHS256Signature(token, Env.sk);
       jwtClaim.validate();
       return null;

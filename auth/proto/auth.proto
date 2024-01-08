@@ -8,6 +8,17 @@ service AuthRpc {
     rpc UpdateUser (UserDto) returns (UserDto);
     rpc DeleteUser (RequestDto) returns (ResponseDto);
     rpc FetchUser (RequestDto) returns (UserDto);
+    rpc FindUser (FindDto) returns (ListUserDto);
+}
+
+message ListUserDto{
+    repeated UserDto users= 1;
+}
+
+message FindDto{
+    string key = 1;
+    string limit = 2;
+    string offset = 3;
 }
 
 message UserDto {

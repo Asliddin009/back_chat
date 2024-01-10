@@ -94,6 +94,21 @@ services:
       volumes:
         - s3_vol:/data
 
+    files:
+      container_name: files
+      build: ./files
+      depends_on:
+        - minio
+      networks:
+        - server_net
+      environment:
+        SK: ${sk}
+        FILES_ACCESS_KEY: ${FILES_ACCESS_KEY}
+        FILES_SECRET_KEY: ${FILES_SECRET_KEY}
+        FILES_PORT: ${FILES_PORT}
+        FILES_USE_SSL: ${FILES_USE_SSL}
+        FILES_STORAGE_PORT: ${FILES_STORAGE_PORT}
+        FILES_STORAGE_HOST: ${FILES_STORAGE_HOST}
 
 volumes:
     db_auth_vol: {}

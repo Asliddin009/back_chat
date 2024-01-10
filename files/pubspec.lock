@@ -261,10 +261,10 @@ packages:
     dependency: transitive
     description:
       name: http
-      sha256: "759d1a329847dd0f39226c688d3e06a6b8679668e350e2891a6474f8b4bb8525"
+      sha256: "5895291c13fa8a3bd82e76d5627f69e0d85ca6a30dcac95c4ea19a5d555879c2"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "0.13.6"
   http2:
     dependency: transitive
     description:
@@ -289,6 +289,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.2"
+  intl:
+    dependency: transitive
+    description:
+      name: intl
+      sha256: "910f85bce16fb5c6f614e117efa303e85a1731bb0081edf3604a2ae6e9a3cc91"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.17.0"
   io:
     dependency: transitive
     description:
@@ -361,6 +369,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
+  minio:
+    dependency: "direct main"
+    description:
+      name: minio
+      sha256: "1e5e8036eef4a786fe7cff7d31be5e6905b19e21622842cefc1aaeaba7090c9e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.5.0"
   node_preamble:
     dependency: transitive
     description:
@@ -393,6 +409,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.11.1"
+  petitparser:
+    dependency: transitive
+    description:
+      name: petitparser
+      sha256: cb3798bef7fc021ac45b308f4b51208a152792445cce0448c9a4ba5879dd8750
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.4.0"
   pointycastle:
     dependency: transitive
     description:
@@ -649,6 +673,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.0"
+  xml:
+    dependency: transitive
+    description:
+      name: xml
+      sha256: "80d494c09849dc3f899d227a78c30c5b949b985ededf884cb3f3bcd39f4b447a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.4.1"
   yaml:
     dependency: transitive
     description:

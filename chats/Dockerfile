@@ -1,6 +1,8 @@
 FROM dart:3.1.0
 
-WORKDIR /app
+RUN groupadd -r user && useradd --no-log-init -r -g user user
+
+WORKDIR /home/user/app
 
 COPY . .
 
@@ -10,4 +12,6 @@ RUN dart compile exe bin/main.dart -o server
 
 EXPOSE 4401
 
-CMD [ "/app/server" ]
+USER user
+
+CMD [ "/home/user/app/server" ]

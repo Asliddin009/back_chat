@@ -1,24 +1,24 @@
 version: '3.5'
 
 services:
-    auth:
-      container_name: auth
-      build: ./auth
-      depends_on:
-        - db_auth
-      networks:
-        - server_net
-      environment:
-        PORT: ${auth_port}
-        SK: ${sk}
-        DB_HOST_ADDRESS: db_auth
-        DB_PORT: ${db_port_auth}
-        DB_USERNAME: ${db_user_auth}
-        DB_PASSWORD: ${db_password_auth}
-        DB_SSL: ${db_use_ssl}
-        ACCESS_TOKEN_LIFE: 100
-        REFRESH_TOKEN_LIFE: 200
-        
+  auth:
+    container_name: auth
+    build: ./auth
+    depends_on:
+      - db_auth
+    networks:
+      - server_net
+    environment:
+      PORT: ${auth_port}
+      SK: ${sk}
+      DB_HOST_ADDRESS: db_auth
+      DB_PORT: ${db_port_auth}
+      DB_USERNAME: ${db_user_auth}
+      DB_PASSWORD: ${db_password_auth}
+      DB_SSL: ${db_use_ssl}
+      ACCESS_TOKEN_LIFE: 100
+      REFRESH_TOKEN_LIFE: 200
+
     db_auth:
       container_name: db_auth
       ports:

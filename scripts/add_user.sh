@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Add user
-adduser yura
+adduser asli
 
 # Add rules
-usermod -aG sudo yura
-usermod -aG yura www-data
+usermod -aG sudo asli
+usermod -aG asli www-data
 
 # Reebot
 reboot

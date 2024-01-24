@@ -4,15 +4,28 @@ import 'dart:isolate';
 import 'package:auth/data/db.dart';
 import 'package:auth/data/user/user.dart';
 import 'package:auth/env.dart';
+import 'package:auth/generated/auth_sms.pbgrpc.dart';
 import 'package:auth/utils.dart';
 import 'package:grpc/grpc.dart';
-import 'package:grpc/src/server/call.dart';
 import 'package:jaguar_jwt/jaguar_jwt.dart';
 import 'package:stormberry/stormberry.dart';
+import 'package:username_generator/username_generator.dart';
 
 import '../generated/auth.pbgrpc.dart';
 
 class AuthRpc extends AuthRpcServiceBase {
+  late final ClientChannel _channel;
+  late final AuthSmsRpcClient _smsRpcClient;
+
+  AuthRpc() {
+    _channel = ClientChannel("auth_sms",
+        port: Env.portSms,
+        options: const ChannelOptions(
+          credentials: ChannelCredentials.insecure(),
+        ));
+    _smsRpcClient = AuthSmsRpcClient(_channel);
+  }
+
   @override
   Future<ResponseDto> deleteUser(ServiceCall call, RequestDto request) async {
     final id = Utils.getIdFromMetadata(call);
@@ -126,4 +139,52 @@ class AuthRpc extends AuthRpcServiceBase {
         limit: limit, offset: offset, orderBy: 'username', where: query));
     return await Isolate.run(() => Utils.parseUsers(listUsers));
   }
+
+  @override
+  Future<ResponseDto> signInSms(ServiceCall call, RequestDto request) async {
+    if (request.phone.isEmpty) {
+      throw GrpcError.invalidArgument("номер телефона не найден");
+    }
+    try {
+      final response =
+          await _smsRpcClient.authSms(SmsRequestDto(phone: request.phone));
+
+      final users = await db.users
+          .queryUsers(QueryParams(limit: 1, where: "phone='${request.phone}'"));
+      if (users.isEmpty) {
+        await db.users.insertOne(UserInsertRequest(
+            username: getRandomUsername(),
+            code: response.sms,
+            phone: request.phone));
+      } else {
+        await db.users
+            .updateOne(UserUpdateRequest(id: users[0].id, code: response.sms));
+      }
+      return ResponseDto(message: "Код отправлен");
+    } on Exception catch (error) {
+      throw GrpcError.internal('ошибка в методе sendSms: $error');
+    }
+  }
+
+  @override
+  Future<TokensDto> sendSms(ServiceCall call, RequestDto request) async {
+    if (request.phone.isEmpty) {
+      throw GrpcError.invalidArgument("номер телефона не найден");
+    }
+    if (request.code.isEmpty) {
+      throw GrpcError.invalidArgument("код не найден");
+    }
+    final users = await db.users
+        .queryUsers(QueryParams(limit: 1, where: "phone='${request.phone}'"));
+    if (users.isEmpty) {
+      throw GrpcError.notFound('пользователь не найден');
+    } else {
+      if (request.code == users[0].code) {
+        throw GrpcError.unauthenticated("код не верный");
+      }
+      return _createTokens(users[0].id.toString());
+    }
+  }
+
+  String getRandomUsername() => UsernameGenerator().generateRandom();
 }

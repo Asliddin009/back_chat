@@ -3,10 +3,15 @@ import 'dart:async';
 import 'package:auth/data/db.dart';
 import 'package:auth/env.dart';
 import 'package:grpc/grpc.dart';
-import 'package:grpc/grpc_connection_interface.dart';
 import 'package:jaguar_jwt/jaguar_jwt.dart';
 
-final _excludeMethods = ['SignUp', 'SignIn', 'RefreshToken'];
+final _excludeMethods = [
+  'SignUp',
+  'SignIn',
+  'RefreshToken',
+  'SendSms',
+  'SignInSms'
+];
 
 abstract class GrpcIntercetors {
   static FutureOr<GrpcError?> tokenInterceptor(
@@ -19,7 +24,7 @@ abstract class GrpcIntercetors {
       jwtClaim.validate();
       return null;
     } catch (error) {
-      return GrpcError.unauthenticated();
+      return GrpcError.unauthenticated('токен недействительный');
     }
   }
 

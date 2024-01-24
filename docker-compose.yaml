@@ -18,102 +18,109 @@ services:
       DB_SSL: ${db_use_ssl}
       ACCESS_TOKEN_LIFE: 100
       REFRESH_TOKEN_LIFE: 200
+      AUTH_SMS_PORT: ${AUTH_SMS_PORT}
+      
+  auth_sms:
+    container_name: auth_sms
+    build: ./auth_sms
+    depends_on:
+      - auth
+    networks:
+      - server_net
+    environment:
+      PORT: ${AUTH_SMS_PORT}
 
-    db_auth:
-      container_name: db_auth
-      ports:
-        - ${db_port_auth}:${db_port_auth}
-      environment:
-        POSTGRES_USER: ${db_user_auth}
-        POSTGRES_PASSWORD: ${db_password_auth}
-      image: postgres:15-alpine
-      command:
-        - 'postgres'
-        - '-c'
-        - 'port=${db_port_auth}'
-      volumes:
-        - db_auth_vol:/var/lib/postgresql/data
-      networks:
-        - server_net
+  db_auth:
+    container_name: db_auth
+    environment:
+      POSTGRES_USER: ${db_user_auth}
+      POSTGRES_PASSWORD: ${db_password_auth}
+    image: postgres:15-alpine
+    ports:
+      - ${db_port_auth}:${db_port_auth}
+    command:
+      - 'postgres'
+      - '-c'
+      - 'port=${db_port_auth}'
+    volumes:
+      - db_auth_vol:/var/lib/postgresql/data
+    networks:
+      - server_net
 
+  db_chats:
+    container_name: db_chats
+    environment:
+      POSTGRES_USER: ${db_user_chats}
+      POSTGRES_PASSWORD: ${db_password_chats}
+    image: postgres:15-alpine
+    command:
+      - 'postgres'
+      - '-c'
+      - 'port=${db_port_chats}'
+    volumes:
+      - db_chats_vol:/var/lib/postgresql/data
+    networks:
+      - server_net
+  chats:
+    container_name: chats
+    build: ./chats
+    depends_on:
+      - db_chats
+    networks:
+      - server_net
+    environment:
+      PORT: ${chats_port}
+      SK: ${sk}
+      DB_HOST_ADDRESS: db_chats
+      DB_PORT: ${db_port_chats}
+      DB_USERNAME: ${db_user_chats}
+      DB_PASSWORD: ${db_password_chats}
+      DB_SSL: ${db_use_ssl}
 
-    db_chats:
-      container_name: db_chats
-      ports:
-        - ${db_port_chats}:${db_port_chats}
-      environment:
-        POSTGRES_USER: ${db_user_chats}
-        POSTGRES_PASSWORD: ${db_password_chats}
-      image: postgres:15-alpine
-      command:
-        - 'postgres'
-        - '-c'
-        - 'port=${db_port_chats}'
-      volumes:
-        - db_chats_vol:/var/lib/postgresql/data
-      networks:
-        - server_net
-
-    chats:
-      container_name: chats
-      build: ./chats
-      depends_on:
-        - db_auth
-      networks:
-        - server_net
-      environment:
-        PORT: ${chats_port}
-        SK: ${sk}
-        DB_HOST_ADDRESS: db_chats
-        DB_PORT: ${db_port_chats}
-        DB_USERNAME: ${db_user_chats}
-        DB_PASSWORD: ${db_password_chats}
-        DB_SSL: ${db_use_ssl}
+  envoy: 
+    container_name: envoy
+    ports:
+      - 8500:8500
+    depends_on:
+      - auth
+      - chats
+    networks:
+      - server_net
+    build: ./envoy
     
-    envoy:
-      container_name: nginx
-      ports:
-        - 8500:8500
-      depends_on:
-        - auth
-        - chats
-      networks:
-        - server_net
-      build: ./envoy
-    
-    minio:
-      image: bitnami/minio:2023.5.18
-      container_name: minio
-      environment:
-        - MINIO_ROOT_USER=${FILES_ACCESS_KEY}
-        - MINIO_ROOT_PASSWORD=${FILES_SECRET_KEY}
-      ports:
-        - 9001:9001
-      networks:
-        - server_net
-      volumes:
-        - s3_vol:/data
-
-    files:
-      container_name: files
-      build: ./files
-      depends_on:
-        - minio
-      networks:
-        - server_net
-      environment:
-        SK: ${sk}
-        FILES_ACCESS_KEY: ${FILES_ACCESS_KEY}
-        FILES_SECRET_KEY: ${FILES_SECRET_KEY}
-        FILES_PORT: ${FILES_PORT}
-        FILES_USE_SSL: ${FILES_USE_SSL}
-        FILES_STORAGE_PORT: ${FILES_STORAGE_PORT}
-        FILES_STORAGE_HOST: ${FILES_STORAGE_HOST}
+  minio:
+    image: bitnami/minio:2023.5.18
+    container_name: minio
+    environment:
+      - MINIO_ROOT_USER=${FILES_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${FILES_SECRET_KEY}
+    ports:
+      - 9001:9001
+    networks:
+      - server_net
+    volumes:
+      - s3_vol:/data
+  files:
+    container_name: files
+    build: ./files
+    depends_on:
+      - minio
+    networks:
+      - server_net
+    environment:
+      SK: ${sk}
+      FILES_PORT: ${FILES_PORT}
+      FILES_ACCESS_KEY: ${FILES_ACCESS_KEY}
+      FILES_SECRET_KEY: ${FILES_SECRET_KEY}
+      FILES_USE_SSL: ${FILES_USE_SSL}
+      FILES_STORAGE_PORT: ${FILES_STORAGE_PORT}
+      FILES_STORAGE_HOST: ${FILES_STORAGE_HOST}
 
 volumes:
-    db_auth_vol: {}
-    db_chats_vol: {}
-    s3_vol: {}
+  db_auth_vol: {}
+  db_chats_vol: {}
+  s3_vol: {}
+  
 networks:
-    server_net:
-      driver: bridge
+  server_net:
+    driver: bridge

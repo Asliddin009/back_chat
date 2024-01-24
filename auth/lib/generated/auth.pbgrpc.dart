@@ -49,6 +49,14 @@ class AuthRpcClient extends $grpc.Client {
       '/AuthRpc/FindUser',
       ($0.FindDto value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.ListUserDto.fromBuffer(value));
+  static final _$signInSms = $grpc.ClientMethod<$0.RequestDto, $0.ResponseDto>(
+      '/AuthRpc/SignInSms',
+      ($0.RequestDto value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.ResponseDto.fromBuffer(value));
+  static final _$sendSms = $grpc.ClientMethod<$0.RequestDto, $0.TokensDto>(
+      '/AuthRpc/SendSms',
+      ($0.RequestDto value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.TokensDto.fromBuffer(value));
 
   AuthRpcClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
@@ -82,6 +90,14 @@ class AuthRpcClient extends $grpc.Client {
 
   $grpc.ResponseFuture<$0.ListUserDto> findUser($0.FindDto request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$findUser, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.ResponseDto> signInSms($0.RequestDto request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$signInSms, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.TokensDto> sendSms($0.RequestDto request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$sendSms, request, options: options);
   }
 }
 
@@ -139,6 +155,20 @@ abstract class AuthRpcServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.FindDto.fromBuffer(value),
         ($0.ListUserDto value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.RequestDto, $0.ResponseDto>(
+        'SignInSms',
+        signInSms_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.RequestDto.fromBuffer(value),
+        ($0.ResponseDto value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.RequestDto, $0.TokensDto>(
+        'SendSms',
+        sendSms_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.RequestDto.fromBuffer(value),
+        ($0.TokensDto value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.TokensDto> signIn_Pre($grpc.ServiceCall call, $async.Future<$0.UserDto> request) async {
@@ -169,6 +199,14 @@ abstract class AuthRpcServiceBase extends $grpc.Service {
     return findUser(call, await request);
   }
 
+  $async.Future<$0.ResponseDto> signInSms_Pre($grpc.ServiceCall call, $async.Future<$0.RequestDto> request) async {
+    return signInSms(call, await request);
+  }
+
+  $async.Future<$0.TokensDto> sendSms_Pre($grpc.ServiceCall call, $async.Future<$0.RequestDto> request) async {
+    return sendSms(call, await request);
+  }
+
   $async.Future<$0.TokensDto> signIn($grpc.ServiceCall call, $0.UserDto request);
   $async.Future<$0.TokensDto> signUp($grpc.ServiceCall call, $0.UserDto request);
   $async.Future<$0.TokensDto> refreshToken($grpc.ServiceCall call, $0.TokensDto request);
@@ -176,4 +214,6 @@ abstract class AuthRpcServiceBase extends $grpc.Service {
   $async.Future<$0.ResponseDto> deleteUser($grpc.ServiceCall call, $0.RequestDto request);
   $async.Future<$0.UserDto> fetchUser($grpc.ServiceCall call, $0.RequestDto request);
   $async.Future<$0.ListUserDto> findUser($grpc.ServiceCall call, $0.FindDto request);
+  $async.Future<$0.ResponseDto> signInSms($grpc.ServiceCall call, $0.RequestDto request);
+  $async.Future<$0.TokensDto> sendSms($grpc.ServiceCall call, $0.RequestDto request);
 }

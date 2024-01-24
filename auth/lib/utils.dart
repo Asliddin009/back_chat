@@ -25,7 +25,7 @@ abstract class Utils {
     return getIdFromToken(accessToken);
   }
 
-  static getUserDtoFromUserVeiw(UserView user) {
+  static UserDto getUserDtoFromUserVeiw(UserView user) {
     return UserDto(
         id: user.id.toString(),
         username: user.username.toString(),

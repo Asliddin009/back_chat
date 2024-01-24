@@ -1,0 +1,17 @@
+syntax="proto3";
+
+
+service AuthSmsRpc {
+    rpc AuthSms (SmsRequestDto) returns (SmsResponseDto);
+}
+
+
+
+message SmsRequestDto {
+    string phone = 1;
+}
+
+message SmsResponseDto {
+    string sms = 1;
+}
+

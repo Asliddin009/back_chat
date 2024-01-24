@@ -41,8 +41,8 @@ class _UserRepository extends BaseRepository
     if (requests.isEmpty) return [];
     var values = QueryValues();
     var rows = await db.query(
-      'INSERT INTO "users" ( "username", "email", "password" )\n'
-      'VALUES ${requests.map((r) => '( ${values.add(r.username)}:text, ${values.add(r.email)}:text, ${values.add(r.password)}:text )').join(', ')}\n'
+      'INSERT INTO "users" ( "username", "email", "password", "phone", "avatar", "first_name", "last_name", "role", "code" )\n'
+      'VALUES ${requests.map((r) => '( ${values.add(r.username)}:text, ${values.add(r.email)}:text, ${values.add(r.password)}:text, ${values.add(r.phone)}:text, ${values.add(r.avatar)}:text, ${values.add(r.firstName)}:text, ${values.add(r.lastName)}:text, ${values.add(r.role)}:text, ${values.add(r.code)}:text )').join(', ')}\n'
       'RETURNING "id"',
       values.values,
     );
@@ -57,9 +57,9 @@ class _UserRepository extends BaseRepository
     var values = QueryValues();
     await db.query(
       'UPDATE "users"\n'
-      'SET "username" = COALESCE(UPDATED."username", "users"."username"), "email" = COALESCE(UPDATED."email", "users"."email"), "password" = COALESCE(UPDATED."password", "users"."password")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.username)}:text::text, ${values.add(r.email)}:text::text, ${values.add(r.password)}:text::text )').join(', ')} )\n'
-      'AS UPDATED("id", "username", "email", "password")\n'
+      'SET "username" = COALESCE(UPDATED."username", "users"."username"), "email" = COALESCE(UPDATED."email", "users"."email"), "password" = COALESCE(UPDATED."password", "users"."password"), "phone" = COALESCE(UPDATED."phone", "users"."phone"), "avatar" = COALESCE(UPDATED."avatar", "users"."avatar"), "first_name" = COALESCE(UPDATED."first_name", "users"."first_name"), "last_name" = COALESCE(UPDATED."last_name", "users"."last_name"), "role" = COALESCE(UPDATED."role", "users"."role"), "code" = COALESCE(UPDATED."code", "users"."code")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.username)}:text::text, ${values.add(r.email)}:text::text, ${values.add(r.password)}:text::text, ${values.add(r.phone)}:text::text, ${values.add(r.avatar)}:text::text, ${values.add(r.firstName)}:text::text, ${values.add(r.lastName)}:text::text, ${values.add(r.role)}:text::text, ${values.add(r.code)}:text::text )').join(', ')} )\n'
+      'AS UPDATED("id", "username", "email", "password", "phone", "avatar", "first_name", "last_name", "role", "code")\n'
       'WHERE "users"."id" = UPDATED."id"',
       values.values,
     );
@@ -69,13 +69,25 @@ class _UserRepository extends BaseRepository
 class UserInsertRequest {
   UserInsertRequest({
     required this.username,
-    required this.email,
-    required this.password,
+    this.email,
+    this.password,
+    this.phone,
+    this.avatar,
+    this.firstName,
+    this.lastName,
+    this.role,
+    this.code,
   });
 
   final String username;
-  final String email;
-  final String password;
+  final String? email;
+  final String? password;
+  final String? phone;
+  final String? avatar;
+  final String? firstName;
+  final String? lastName;
+  final String? role;
+  final String? code;
 }
 
 class UserUpdateRequest {
@@ -84,12 +96,24 @@ class UserUpdateRequest {
     this.username,
     this.email,
     this.password,
+    this.phone,
+    this.avatar,
+    this.firstName,
+    this.lastName,
+    this.role,
+    this.code,
   });
 
   final int id;
   final String? username;
   final String? email;
   final String? password;
+  final String? phone;
+  final String? avatar;
+  final String? firstName;
+  final String? lastName;
+  final String? role;
+  final String? code;
 }
 
 class UserViewQueryable extends KeyedViewQueryable<UserView, int> {
@@ -110,20 +134,38 @@ class UserViewQueryable extends KeyedViewQueryable<UserView, int> {
   UserView decode(TypedMap map) => UserView(
       id: map.get('id'),
       username: map.get('username'),
-      email: map.get('email'),
-      password: map.get('password'));
+      email: map.getOpt('email'),
+      password: map.getOpt('password'),
+      phone: map.getOpt('phone'),
+      avatar: map.getOpt('avatar'),
+      firstName: map.getOpt('first_name'),
+      lastName: map.getOpt('last_name'),
+      role: map.getOpt('role'),
+      code: map.getOpt('code'));
 }
 
 class UserView {
   UserView({
     required this.id,
     required this.username,
-    required this.email,
-    required this.password,
+    this.email,
+    this.password,
+    this.phone,
+    this.avatar,
+    this.firstName,
+    this.lastName,
+    this.role,
+    this.code,
   });
 
   final int id;
   final String username;
-  final String email;
-  final String password;
+  final String? email;
+  final String? password;
+  final String? phone;
+  final String? avatar;
+  final String? firstName;
+  final String? lastName;
+  final String? role;
+  final String? code;
 }

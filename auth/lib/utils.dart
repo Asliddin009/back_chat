@@ -13,7 +13,7 @@ abstract class Utils {
     return sha256.convert(bytes).toString();
   }
 
-  static getIdFromToken(String token) {
+  static int getIdFromToken(String token) {
     final jwtClaim = verifyJwtHS256Signature(token, Env.sk);
     final id = int.tryParse(jwtClaim['user_id']);
     if (id == null) throw GrpcError.dataLoss("User id not found");
@@ -32,13 +32,18 @@ abstract class Utils {
         email: user.email.toString());
   }
 
+  static bool areUserDtoEqual(UserDto user1, UserDto user2) {
+    return user1.id == user2.id &&
+        user1.username == user2.username &&
+        user1.email == user2.email;
+  }
+
   static ListUserDto parseUsers(List<UserView> users) {
     try {
       return ListUserDto(
           users: [...users.map((user) => getUserDtoFromUserVeiw(user))]);
     } catch (error) {
       throw GrpcError.internal("Ошибка в методе parseUsers");
-      //return ListUserDto(users: []);
     }
   }
 }

@@ -1,8 +1,8 @@
 import 'dart:developer';
 import 'dart:isolate';
 
-import 'package:auth/data/db.dart';
 import 'package:auth/data/user/user.dart';
+import 'package:auth/domain/repository.dart';
 import 'package:auth/env.dart';
 import 'package:auth/generated/auth_sms.pbgrpc.dart';
 import 'package:auth/utils.dart';
@@ -16,30 +16,33 @@ import '../generated/auth.pbgrpc.dart';
 class AuthRpc extends AuthRpcServiceBase {
   late final ClientChannel _channel;
   late final AuthSmsRpcClient _smsRpcClient;
+  final IRepo repo;
 
-  AuthRpc() {
-    _channel = ClientChannel("auth_sms",
-        port: Env.portSms,
-        options: const ChannelOptions(
-          credentials: ChannelCredentials.insecure(),
-        ));
-    _smsRpcClient = AuthSmsRpcClient(_channel);
+  AuthRpc(this.repo, {bool isTest = false}) {
+    if (isTest == false) {
+      _channel = ClientChannel("auth_sms",
+          port: Env.portSms,
+          options: const ChannelOptions(
+            credentials: ChannelCredentials.insecure(),
+          ));
+      _smsRpcClient = AuthSmsRpcClient(_channel);
+    }
   }
 
   @override
   Future<ResponseDto> deleteUser(ServiceCall call, RequestDto request) async {
     final id = Utils.getIdFromMetadata(call);
-    final user = await db.users.queryUser(id);
+    final user = await repo.feathUser(id);
     if (user == null) throw GrpcError.notFound("Пользователь не найден");
 
-    await db.users.deleteOne(id);
+    repo.deleteUser(id);
     return ResponseDto(message: "Пользователь удален");
   }
 
   @override
   Future<UserDto> fetchUser(ServiceCall call, RequestDto request) async {
     final id = Utils.getIdFromMetadata(call);
-    final user = await db.users.queryUser(id);
+    final user = await repo.feathUser(id);
     if (user == null) throw GrpcError.notFound("Пользователь не найден");
     return Utils.getUserDtoFromUserVeiw(user);
   }
@@ -50,7 +53,7 @@ class AuthRpc extends AuthRpcServiceBase {
       throw GrpcError.invalidArgument('Email not found');
     }
     final id = Utils.getIdFromToken(request.refreshToken);
-    final user = await db.users.queryUser(id);
+    final user = await repo.feathUser(id);
     if (user == null) throw GrpcError.notFound("User not found");
     return _createTokens(user.id.toString());
   }
@@ -64,8 +67,8 @@ class AuthRpc extends AuthRpcServiceBase {
       throw GrpcError.invalidArgument('Password not found');
     }
     final hashPassword = Utils.getHastPassword(request.password);
-    final users = await db.users
-        .queryUsers(QueryParams(where: "email='${request.email}'"));
+    final users =
+        await repo.feathUsers(QueryParams(where: "email='${request.email}'"));
     if (users.isEmpty) {
       throw GrpcError.notFound("Пользователей с таким mail не существует");
     }
@@ -88,7 +91,7 @@ class AuthRpc extends AuthRpcServiceBase {
       throw GrpcError.invalidArgument('Username not found');
     }
     try {
-      final id = await db.users.insertOne(UserInsertRequest(
+      final id = await repo.addUser(UserInsertRequest(
         username: request.username,
         email: request.email,
         password: Utils.getHastPassword(request.password),
@@ -97,21 +100,20 @@ class AuthRpc extends AuthRpcServiceBase {
     } catch (error) {
       log('$error');
       throw GrpcError.notFound("Такой пользователь уже существует");
-      //return TokensDto();
     }
   }
 
   @override
   Future<UserDto> updateUser(ServiceCall call, UserDto request) async {
     final id = Utils.getIdFromMetadata(call);
-    await db.users.updateOne(UserUpdateRequest(
+    repo.updateUser(UserUpdateRequest(
         id: id,
         username: request.username.isEmpty ? null : request.username,
         email: request.email.isEmpty ? null : request.email,
         password: request.password.isEmpty
             ? null
             : Utils.getHastPassword(request.password)));
-    final user = await db.users.queryUser(id);
+    final user = await repo.feathUser(id);
     if (user == null) throw GrpcError.notFound("Что то пошло не так");
     return Utils.getUserDtoFromUserVeiw(user);
   }
@@ -135,7 +137,7 @@ class AuthRpc extends AuthRpcServiceBase {
     final key = request.key;
     if (key.isEmpty) return ListUserDto(users: []);
     final query = "username LIKE '%$key%'";
-    final listUsers = await db.users.queryUsers(QueryParams(
+    final listUsers = await repo.feathUsers(QueryParams(
         limit: limit, offset: offset, orderBy: 'username', where: query));
     return await Isolate.run(() => Utils.parseUsers(listUsers));
   }
@@ -149,16 +151,15 @@ class AuthRpc extends AuthRpcServiceBase {
       final response =
           await _smsRpcClient.authSms(SmsRequestDto(phone: request.phone));
 
-      final users = await db.users
-          .queryUsers(QueryParams(limit: 1, where: "phone='${request.phone}'"));
+      final users = await repo
+          .feathUsers(QueryParams(limit: 1, where: "phone='${request.phone}'"));
       if (users.isEmpty) {
-        await db.users.insertOne(UserInsertRequest(
+        await repo.addUser(UserInsertRequest(
             username: getRandomUsername(),
             code: response.sms,
             phone: request.phone));
       } else {
-        await db.users
-            .updateOne(UserUpdateRequest(id: users[0].id, code: response.sms));
+        repo.updateUser(UserUpdateRequest(id: users[0].id, code: response.sms));
       }
       return ResponseDto(message: "Код отправлен");
     } on Exception catch (error) {
@@ -174,8 +175,8 @@ class AuthRpc extends AuthRpcServiceBase {
     if (request.code.isEmpty) {
       throw GrpcError.invalidArgument("код не найден");
     }
-    final users = await db.users
-        .queryUsers(QueryParams(limit: 1, where: "phone='${request.phone}'"));
+    final users = await repo
+        .feathUsers(QueryParams(limit: 1, where: "phone='${request.phone}'"));
     if (users.isEmpty) {
       throw GrpcError.notFound('пользователь не найден');
     } else {

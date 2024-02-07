@@ -19,14 +19,14 @@ import 'auth_sms.pb.dart' as $0;
 
 export 'auth_sms.pb.dart';
 
-@$pb.GrpcServiceName('AuthRpc')
-class AuthRpcClient extends $grpc.Client {
+@$pb.GrpcServiceName('AuthSmsRpc')
+class AuthSmsRpcClient extends $grpc.Client {
   static final _$authSms = $grpc.ClientMethod<$0.SmsRequestDto, $0.SmsResponseDto>(
-      '/AuthRpc/AuthSms',
+      '/AuthSmsRpc/AuthSms',
       ($0.SmsRequestDto value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.SmsResponseDto.fromBuffer(value));
 
-  AuthRpcClient($grpc.ClientChannel channel,
+  AuthSmsRpcClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
       $core.Iterable<$grpc.ClientInterceptor>? interceptors})
       : super(channel, options: options,
@@ -37,11 +37,11 @@ class AuthRpcClient extends $grpc.Client {
   }
 }
 
-@$pb.GrpcServiceName('AuthRpc')
-abstract class AuthRpcServiceBase extends $grpc.Service {
-  $core.String get $name => 'AuthRpc';
+@$pb.GrpcServiceName('AuthSmsRpc')
+abstract class AuthSmsRpcServiceBase extends $grpc.Service {
+  $core.String get $name => 'AuthSmsRpc';
 
-  AuthRpcServiceBase() {
+  AuthSmsRpcServiceBase() {
     $addMethod($grpc.ServiceMethod<$0.SmsRequestDto, $0.SmsResponseDto>(
         'AuthSms',
         authSms_Pre,

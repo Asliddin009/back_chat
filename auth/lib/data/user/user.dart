@@ -21,4 +21,5 @@ abstract class User {
   String? get lastName;
   String? get role;
   String? get code;
+  String? get codeLife;
 }

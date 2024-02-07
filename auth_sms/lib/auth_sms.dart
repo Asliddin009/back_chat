@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
-import 'package:auth/domain/auth_rpc.dart';
+import 'package:auth/domain/auth_sms_rpc.dart';
 import 'package:auth/env.dart';
 import 'package:grpc/grpc.dart';
 

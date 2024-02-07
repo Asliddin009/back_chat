@@ -143,44 +143,53 @@ class AuthRpc extends AuthRpcServiceBase {
   }
 
   @override
-  Future<ResponseDto> signInSms(ServiceCall call, RequestDto request) async {
-    if (request.phone.isEmpty) {
-      throw GrpcError.invalidArgument("номер телефона не найден");
+  Future<ResponseDto> signInSms(ServiceCall call, UserDto request) async {
+    if (request.email.isEmpty) {
+      throw GrpcError.invalidArgument('Email not found');
+    }
+    if (request.password.isEmpty) {
+      throw GrpcError.invalidArgument('Password not found');
+    }
+    final users = await repo
+        .feathUsers(QueryParams(limit: 1, where: "email='${request.email}'"));
+    if (users.isEmpty) {
+      throw GrpcError.notFound("Пользователей с таким mail не существует");
+    }
+    log(users[0].username);
+    final hashPassword = Utils.getHastPassword(request.password);
+    if (hashPassword != users[0].password) {
+      throw GrpcError.unauthenticated("Неправельный пароль");
     }
     try {
+      print('work printer0');
       final response =
-          await _smsRpcClient.authSms(SmsRequestDto(phone: request.phone));
-
-      final users = await repo
-          .feathUsers(QueryParams(limit: 1, where: "phone='${request.phone}'"));
-      if (users.isEmpty) {
-        await repo.addUser(UserInsertRequest(
-            username: getRandomUsername(),
-            code: response.sms,
-            phone: request.phone));
-      } else {
-        repo.updateUser(UserUpdateRequest(id: users[0].id, code: response.sms));
-      }
+          await _smsRpcClient.authSms(SmsRequestDto(email: request.email));
+      print('work printer1');
+      repo.updateUser(UserUpdateRequest(id: users[0].id, code: response.sms));
+      print('work printer2');
       return ResponseDto(message: "Код отправлен");
-    } on Exception catch (error) {
-      throw GrpcError.internal('ошибка в методе sendSms: $error');
+    } on Exception catch (error, trace) {
+      throw GrpcError.internal(
+          'ошибка в методе signInSms: ${error.toString()}, trace: $trace');
     }
   }
 
   @override
   Future<TokensDto> sendSms(ServiceCall call, RequestDto request) async {
-    if (request.phone.isEmpty) {
-      throw GrpcError.invalidArgument("номер телефона не найден");
-    }
     if (request.code.isEmpty) {
       throw GrpcError.invalidArgument("код не найден");
     }
     final users = await repo
-        .feathUsers(QueryParams(limit: 1, where: "phone='${request.phone}'"));
+        .feathUsers(QueryParams(limit: 1, where: "email='${request.email}'"));
     if (users.isEmpty) {
       throw GrpcError.notFound('пользователь не найден');
     } else {
-      if (request.code == users[0].code) {
+      if (Utils.compareDateTime(
+          DateTime.now(), Utils.convertStringToDateTime(users[0].codeLife!))) {
+        throw GrpcError.unauthenticated("код не действительный ");
+      }
+      ;
+      if (request.code != users[0].code) {
         throw GrpcError.unauthenticated("код не верный");
       }
       return _createTokens(users[0].id.toString());

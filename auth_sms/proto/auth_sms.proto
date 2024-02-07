@@ -8,10 +8,11 @@ service AuthSmsRpc {
 
 
 message SmsRequestDto {
-    string phone = 1;
+    string email = 1;
 }
 
 message SmsResponseDto {
     string sms = 1;
+    string sms_life_date = 2; 
 }
 

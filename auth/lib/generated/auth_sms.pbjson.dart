@@ -17,23 +17,25 @@ import 'dart:typed_data' as $typed_data;
 const SmsRequestDto$json = {
   '1': 'SmsRequestDto',
   '2': [
-    {'1': 'phone', '3': 1, '4': 1, '5': 9, '10': 'phone'},
+    {'1': 'email', '3': 1, '4': 1, '5': 9, '10': 'email'},
   ],
 };
 
 /// Descriptor for `SmsRequestDto`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List smsRequestDtoDescriptor = $convert.base64Decode(
-    'Cg1TbXNSZXF1ZXN0RHRvEhQKBXBob25lGAEgASgJUgVwaG9uZQ==');
+    'Cg1TbXNSZXF1ZXN0RHRvEhQKBWVtYWlsGAEgASgJUgVlbWFpbA==');
 
 @$core.Deprecated('Use smsResponseDtoDescriptor instead')
 const SmsResponseDto$json = {
   '1': 'SmsResponseDto',
   '2': [
     {'1': 'sms', '3': 1, '4': 1, '5': 9, '10': 'sms'},
+    {'1': 'sms_life_date', '3': 2, '4': 1, '5': 9, '10': 'smsLifeDate'},
   ],
 };
 
 /// Descriptor for `SmsResponseDto`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List smsResponseDtoDescriptor = $convert.base64Decode(
-    'Cg5TbXNSZXNwb25zZUR0bxIQCgNzbXMYASABKAlSA3Ntcw==');
+    'Cg5TbXNSZXNwb25zZUR0bxIQCgNzbXMYASABKAlSA3NtcxIiCg1zbXNfbGlmZV9kYXRlGAIgAS'
+    'gJUgtzbXNMaWZlRGF0ZQ==');
 

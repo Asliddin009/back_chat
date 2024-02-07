@@ -29,6 +29,9 @@ services:
       - server_net
     environment:
       PORT: ${AUTH_SMS_PORT}
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+      CODE_LIFE: ${CODE_LIFE}
 
   db_auth:
     container_name: db_auth

@@ -38,6 +38,22 @@ abstract class Utils {
         user1.email == user2.email;
   }
 
+  static DateTime convertStringToDateTime(String yyyymmdd) {
+    int yyyy = int.parse(yyyymmdd.substring(0, 4));
+    int mm = int.parse(yyyymmdd.substring(5, 7));
+    int dd = int.parse(yyyymmdd.substring(8, 10));
+    late DateTime dateTimeObject;
+    dateTimeObject = DateTime(yyyy, mm, dd);
+    return dateTimeObject;
+  }
+
+  static bool compareDateTime(DateTime dateTime1, DateTime dateTime2) {
+    if (dateTime1.year > dateTime2.year) return true;
+    if (dateTime1.day > dateTime2.day) return true;
+    if (dateTime1.minute > dateTime2.minute) return true;
+    return false;
+  }
+
   static ListUserDto parseUsers(List<UserView> users) {
     try {
       return ListUserDto(

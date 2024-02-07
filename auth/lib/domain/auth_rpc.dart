@@ -155,22 +155,23 @@ class AuthRpc extends AuthRpcServiceBase {
     if (users.isEmpty) {
       throw GrpcError.notFound("Пользователей с таким mail не существует");
     }
-    log(users[0].username);
-    final hashPassword = Utils.getHastPassword(request.password);
-    if (hashPassword != users[0].password) {
-      throw GrpcError.unauthenticated("Неправельный пароль");
-    }
+    checkPassword(request, users);
     try {
-      print('work printer0');
       final response =
           await _smsRpcClient.authSms(SmsRequestDto(email: request.email));
-      print('work printer1');
-      repo.updateUser(UserUpdateRequest(id: users[0].id, code: response.sms));
-      print('work printer2');
+      repo.updateUser(UserUpdateRequest(
+          id: users[0].id, code: response.sms, codeLife: response.smsLifeDate));
       return ResponseDto(message: "Код отправлен");
     } on Exception catch (error, trace) {
       throw GrpcError.internal(
           'ошибка в методе signInSms: ${error.toString()}, trace: $trace');
+    }
+  }
+
+  void checkPassword(UserDto request, List<UserView> users) {
+    final hashPassword = Utils.getHastPassword(request.password);
+    if (hashPassword != users[0].password) {
+      throw GrpcError.unauthenticated("Неправельный пароль");
     }
   }
 
@@ -179,21 +180,23 @@ class AuthRpc extends AuthRpcServiceBase {
     if (request.code.isEmpty) {
       throw GrpcError.invalidArgument("код не найден");
     }
+    if (request.email.isEmpty) {
+      throw GrpcError.invalidArgument("почта не найден");
+    }
     final users = await repo
         .feathUsers(QueryParams(limit: 1, where: "email='${request.email}'"));
     if (users.isEmpty) {
       throw GrpcError.notFound('пользователь не найден');
-    } else {
-      if (Utils.compareDateTime(
-          DateTime.now(), Utils.convertStringToDateTime(users[0].codeLife!))) {
-        throw GrpcError.unauthenticated("код не действительный ");
-      }
-      ;
-      if (request.code != users[0].code) {
-        throw GrpcError.unauthenticated("код не верный");
-      }
-      return _createTokens(users[0].id.toString());
     }
+    if (Utils.compareDateTime(DateTime.now().add(Duration(hours: 3)),
+        Utils.convertStringToDateTime(users[0].codeLife!))) {
+      throw GrpcError.unauthenticated("код не действительный ");
+    }
+    if (request.code != users[0].code) {
+      throw GrpcError.unauthenticated(
+          "Вы ввели неправильный или недействительный код");
+    }
+    return _createTokens(users[0].id.toString());
   }
 
   String getRandomUsername() => UsernameGenerator().generateRandom();

@@ -39,11 +39,14 @@ abstract class Utils {
   }
 
   static DateTime convertStringToDateTime(String yyyymmdd) {
-    int yyyy = int.parse(yyyymmdd.substring(0, 4));
-    int mm = int.parse(yyyymmdd.substring(5, 7));
-    int dd = int.parse(yyyymmdd.substring(8, 10));
+    int dd = int.parse(yyyymmdd.substring(0, 2));
+    int mm = int.parse(yyyymmdd.substring(3, 5));
+    int yyyy = int.parse(yyyymmdd.substring(6, 10));
+    int hh = int.parse(yyyymmdd.substring(11, 13));
+    int min = int.parse(yyyymmdd.substring(14, 16));
+
     late DateTime dateTimeObject;
-    dateTimeObject = DateTime(yyyy, mm, dd);
+    dateTimeObject = DateTime(yyyy, mm, dd, hh, min);
     return dateTimeObject;
   }
 

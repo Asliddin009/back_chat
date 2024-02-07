@@ -5,7 +5,6 @@ import 'package:files/domain/i_storage.dart';
 import 'package:files/generated/files.pbgrpc.dart';
 import 'package:files/utils.dart';
 import 'package:grpc/grpc.dart';
-import 'package:grpc/src/server/call.dart';
 
 final class FilesRpc extends FilesRpcServiceBase {
   final IStorage storage;

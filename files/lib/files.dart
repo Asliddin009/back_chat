@@ -9,11 +9,13 @@ import 'package:grpc/grpc.dart';
 
 Future<void> startServer() async {
   runZonedGuarded(() async {
-    final authServer = Server([
-      FilesRpc(MinioStorage())
-    ], <Interceptor>[
-      GrpcIntercetors.tokenInterceptor,
-    ], CodecRegistry(codecs: [GzipCodec()]));
+    final authServer = Server.create(
+      services: [FilesRpc(MinioStorage())],
+      interceptors: <Interceptor>[
+        GrpcIntercetors.tokenInterceptor,
+      ],
+      codecRegistry: CodecRegistry(codecs: [GzipCodec()]),
+    );
     await authServer.serve(port: Env.port);
     log("Сервер слушает порт: ${authServer.port}");
   }, (error, stack) {

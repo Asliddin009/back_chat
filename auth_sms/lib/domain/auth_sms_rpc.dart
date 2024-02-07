@@ -18,13 +18,13 @@ class AuthSmsRpc extends AuthSmsRpcServiceBase {
       final password = Env.passwordSender;
       final email = request.email;
       final codeLifeData = Utils.convertDateTimeToString(
-          DateTime.now().add(Duration(seconds: Env.codeLife)));
+          DateTime.now().add(Duration(seconds: Env.codeLife, hours: 3)));
       final smtpServer = gmail(emailAsliddin, password);
       final message = Message()
         ..from = emailAsliddin
         ..recipients = [email]
         ..subject = 'Ваш код: $code'
-        ..text = 'ваш код актуален до $codeLifeData';
+        ..text = 'ваш код актуален до $codeLifeData по Москве';
 
       await send(message, smtpServer);
       return Future.value(

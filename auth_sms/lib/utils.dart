@@ -1,13 +1,4 @@
 abstract class Utils {
-  static DateTime convertStringToDateTime(String yyyymmdd) {
-    int yyyy = int.parse(yyyymmdd.substring(0, 4));
-    int mm = int.parse(yyyymmdd.substring(5, 7));
-    int dd = int.parse(yyyymmdd.substring(8, 10));
-    late DateTime dateTimeObject;
-    dateTimeObject = DateTime(yyyy, mm, dd);
-    return dateTimeObject;
-  }
-
   static String convertDateTimeToString(DateTime dateTime) {
     String year = dateTime.year.toString();
 
@@ -30,7 +21,7 @@ abstract class Utils {
     if (minute.length == 1) {
       minute = '0$minute';
     }
-    String ddmmyyyyhhmm = "$year-$month-$day  $hour:$minute";
+    String ddmmyyyyhhmm = "$day.$month.$year $hour:$minute";
     return ddmmyyyyhhmm;
   }
 }

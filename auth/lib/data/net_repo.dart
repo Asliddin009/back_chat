@@ -1,7 +1,7 @@
 import 'package:auth/data/user/user.dart';
 import 'package:auth/domain/repository.dart';
 import 'package:auth/data/db.dart';
-import "package:stormberry/src/core/query_params.dart";
+import 'package:stormberry/stormberry.dart';
 
 final class NetRepo implements IRepo {
   @override

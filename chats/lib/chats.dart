@@ -9,13 +9,15 @@ import 'package:grpc/grpc.dart';
 
 Future<void> startServer() async {
   runZonedGuarded(() async {
-    final authServer = Server([
-      ChatRpc()
-    ], <Interceptor>[
-      GrpcIntercetors.tokenInterceptor,
-    ], CodecRegistry(codecs: [GzipCodec()]));
+    final authServer = Server.create(
+      services: [ChatRpc()],
+      interceptors: <Interceptor>[
+        GrpcIntercetors.tokenInterceptor,
+      ],
+      codecRegistry: CodecRegistry(codecs: [GzipCodec()]),
+    );
     await authServer.serve(port: Env.port);
-      log("Сервер слушает порт: ${authServer.port}");
+    log("Сервер слушает порт: ${authServer.port}");
     db = initDatabase();
     db.open();
   }, (error, stack) {

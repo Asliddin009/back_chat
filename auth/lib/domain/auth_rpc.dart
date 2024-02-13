@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:isolate';
 
+import 'package:auth/data/role/role.dart';
 import 'package:auth/data/user/user.dart';
 import 'package:auth/domain/repository.dart';
 import 'package:auth/env.dart';
@@ -55,7 +56,7 @@ class AuthRpc extends AuthRpcServiceBase {
     final id = Utils.getIdFromToken(request.refreshToken);
     final user = await repo.feathUser(id);
     if (user == null) throw GrpcError.notFound("User not found");
-    return _createTokens(user.id.toString());
+    return _createTokens(user.id.toString(), user.roleList);
   }
 
   @override
@@ -76,7 +77,7 @@ class AuthRpc extends AuthRpcServiceBase {
     if (hashPassword != user.password) {
       throw GrpcError.unauthenticated("Неправельный пароль");
     }
-    return _createTokens(user.id.toString());
+    return _createTokens(user.id.toString(), user.roleList);
   }
 
   @override
@@ -92,11 +93,13 @@ class AuthRpc extends AuthRpcServiceBase {
     }
     try {
       final id = await repo.addUser(UserInsertRequest(
+        roleList: [3],
         username: request.username,
         email: request.email,
         password: Utils.getHastPassword(request.password),
       ));
-      return _createTokens(id.toString());
+      repo.addUserRole(id, roleId: 3);
+      return _createTokens(id.toString(), [3]);
     } catch (error) {
       log('$error');
       throw GrpcError.notFound("Такой пользователь уже существует");
@@ -118,13 +121,14 @@ class AuthRpc extends AuthRpcServiceBase {
     return Utils.getUserDtoFromUserVeiw(user);
   }
 
-  TokensDto _createTokens(String id) {
+  TokensDto _createTokens(String id, List<int> roleListId) {
+    final roleId = Utils.convertListToString(roleListId);
     final accessTokenSet = JwtClaim(
         maxAge: Duration(hours: Env.accessTokenLife),
-        otherClaims: {'user_id': id});
+        otherClaims: {'user_id': id, 'role_id': roleId});
     final refreshTokenSet = JwtClaim(
         maxAge: Duration(hours: Env.refreshTokenLife),
-        otherClaims: {'user_id': id});
+        otherClaims: {'user_id': id, 'role_id': roleId});
     return TokensDto(
         accessToken: issueJwtHS256(accessTokenSet, Env.sk),
         refreshToken: issueJwtHS256(refreshTokenSet, Env.sk));
@@ -196,8 +200,30 @@ class AuthRpc extends AuthRpcServiceBase {
       throw GrpcError.unauthenticated(
           "Вы ввели неправильный или недействительный код");
     }
-    return _createTokens(users[0].id.toString());
+    return _createTokens(users[0].id.toString(), users[0].roleList);
   }
 
   String getRandomUsername() => UsernameGenerator().generateRandom();
+
+  @override
+  Future<ResponseDto> addRole(ServiceCall call, RoleDto request) async {
+    if (request.userId.isEmpty) {
+      throw GrpcError.invalidArgument("userId не найден");
+    }
+    if (request.roleName.isEmpty) {
+      throw GrpcError.invalidArgument("roleName не найден");
+    }
+    final roles = await repo
+        .feathRoles(QueryParams(limit: 1, where: "name='${request.roleName}'"));
+    if (roles.isEmpty) {
+      repo.addRole(RoleInsertRequest(
+          name: request.roleName,
+          isCreate: request.isCreate ?? false,
+          isRead: request.isRead ?? false,
+          isUpdate: request.isUpdate ?? false,
+          isDelete: request.isDelete ?? false));
+      return ResponseDto(message: "пользователю добавлена новая роль");
+    }
+    return ResponseDto(message: "пользователю добавлена роль");
+  }
 }

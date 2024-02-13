@@ -135,6 +135,126 @@ class FindDto extends $pb.GeneratedMessage {
   void clearOffset() => clearField(3);
 }
 
+class RoleDto extends $pb.GeneratedMessage {
+  factory RoleDto({
+    $core.String? userId,
+    $core.String? roleName,
+    $core.bool? isRead,
+    $core.bool? isCreate,
+    $core.bool? isUpdate,
+    $core.bool? isDelete,
+  }) {
+    final $result = create();
+    if (userId != null) {
+      $result.userId = userId;
+    }
+    if (roleName != null) {
+      $result.roleName = roleName;
+    }
+    if (isRead != null) {
+      $result.isRead = isRead;
+    }
+    if (isCreate != null) {
+      $result.isCreate = isCreate;
+    }
+    if (isUpdate != null) {
+      $result.isUpdate = isUpdate;
+    }
+    if (isDelete != null) {
+      $result.isDelete = isDelete;
+    }
+    return $result;
+  }
+  RoleDto._() : super();
+  factory RoleDto.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory RoleDto.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RoleDto', createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
+    ..aOS(2, _omitFieldNames ? '' : 'roleName')
+    ..aOB(3, _omitFieldNames ? '' : 'isRead')
+    ..aOB(4, _omitFieldNames ? '' : 'isCreate')
+    ..aOB(5, _omitFieldNames ? '' : 'isUpdate')
+    ..aOB(6, _omitFieldNames ? '' : 'isDelete')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  RoleDto clone() => RoleDto()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  RoleDto copyWith(void Function(RoleDto) updates) => super.copyWith((message) => updates(message as RoleDto)) as RoleDto;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RoleDto create() => RoleDto._();
+  RoleDto createEmptyInstance() => create();
+  static $pb.PbList<RoleDto> createRepeated() => $pb.PbList<RoleDto>();
+  @$core.pragma('dart2js:noInline')
+  static RoleDto getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RoleDto>(create);
+  static RoleDto? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get userId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set userId($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get roleName => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set roleName($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasRoleName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRoleName() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get isRead => $_getBF(2);
+  @$pb.TagNumber(3)
+  set isRead($core.bool v) { $_setBool(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasIsRead() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearIsRead() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get isCreate => $_getBF(3);
+  @$pb.TagNumber(4)
+  set isCreate($core.bool v) { $_setBool(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasIsCreate() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearIsCreate() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get isUpdate => $_getBF(4);
+  @$pb.TagNumber(5)
+  set isUpdate($core.bool v) { $_setBool(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasIsUpdate() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearIsUpdate() => clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.bool get isDelete => $_getBF(5);
+  @$pb.TagNumber(6)
+  set isDelete($core.bool v) { $_setBool(5, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasIsDelete() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearIsDelete() => clearField(6);
+}
+
 enum UserDto_OptionalPassword {
   password, 
   notSet

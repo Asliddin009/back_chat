@@ -19,7 +19,7 @@ abstract class User {
   String? get avatar;
   String? get firstName;
   String? get lastName;
-  String? get role;
   String? get code;
   String? get codeLife;
+  List<int> get roleList;
 }

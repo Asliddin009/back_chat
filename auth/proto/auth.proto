@@ -11,6 +11,7 @@ service AuthRpc {
     rpc FindUser (FindDto) returns (ListUserDto);
     rpc SignInSms (UserDto) returns (ResponseDto);
     rpc SendSms (RequestDto) returns (TokensDto);
+    rpc AddRole (RoleDto) returns (ResponseDto);
 }
 
 message ListUserDto{
@@ -21,6 +22,14 @@ message FindDto{
     string key = 1;
     string limit = 2;
     string offset = 3;
+}
+message RoleDto{
+    string user_id = 1;
+    string role_name = 2;
+    bool is_read = 3;
+    bool is_create = 4;
+    bool is_update = 5;
+    bool is_delete = 6;
 }
 
 message UserDto {

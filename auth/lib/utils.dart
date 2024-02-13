@@ -57,6 +57,16 @@ abstract class Utils {
     return false;
   }
 
+  static String convertListToString(List<int> list) {
+    return list.toString();
+  }
+
+  static List<String> convertStringToList(String input) {
+    input = input.substring(1, input.length - 1);
+    List<String> list = input.split(',');
+    return list;
+  }
+
   static ListUserDto parseUsers(List<UserView> users) {
     try {
       return ListUserDto(

@@ -40,6 +40,26 @@ final $typed_data.Uint8List findDtoDescriptor = $convert.base64Decode(
     'CgdGaW5kRHRvEhAKA2tleRgBIAEoCVIDa2V5EhQKBWxpbWl0GAIgASgJUgVsaW1pdBIWCgZvZm'
     'ZzZXQYAyABKAlSBm9mZnNldA==');
 
+@$core.Deprecated('Use roleDtoDescriptor instead')
+const RoleDto$json = {
+  '1': 'RoleDto',
+  '2': [
+    {'1': 'user_id', '3': 1, '4': 1, '5': 9, '10': 'userId'},
+    {'1': 'role_name', '3': 2, '4': 1, '5': 9, '10': 'roleName'},
+    {'1': 'is_read', '3': 3, '4': 1, '5': 8, '10': 'isRead'},
+    {'1': 'is_create', '3': 4, '4': 1, '5': 8, '10': 'isCreate'},
+    {'1': 'is_update', '3': 5, '4': 1, '5': 8, '10': 'isUpdate'},
+    {'1': 'is_delete', '3': 6, '4': 1, '5': 8, '10': 'isDelete'},
+  ],
+};
+
+/// Descriptor for `RoleDto`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List roleDtoDescriptor = $convert.base64Decode(
+    'CgdSb2xlRHRvEhcKB3VzZXJfaWQYASABKAlSBnVzZXJJZBIbCglyb2xlX25hbWUYAiABKAlSCH'
+    'JvbGVOYW1lEhcKB2lzX3JlYWQYAyABKAhSBmlzUmVhZBIbCglpc19jcmVhdGUYBCABKAhSCGlz'
+    'Q3JlYXRlEhsKCWlzX3VwZGF0ZRgFIAEoCFIIaXNVcGRhdGUSGwoJaXNfZGVsZXRlGAYgASgIUg'
+    'hpc0RlbGV0ZQ==');
+
 @$core.Deprecated('Use userDtoDescriptor instead')
 const UserDto$json = {
   '1': 'UserDto',

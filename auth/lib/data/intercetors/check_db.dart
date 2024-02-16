@@ -5,3 +5,11 @@ void ckeckDatabase() {
     db = initDatabase();
   }
 }
+
+final excludeMethods = [
+  'SignUp',
+  'SignIn',
+  'RefreshToken',
+  'SendSms',
+  'SignInSms'
+];

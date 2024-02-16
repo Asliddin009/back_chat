@@ -8,7 +8,7 @@ abstract interface class IRepo {
   Future<List<UserView>> feathUsers(QueryParams params);
   Future<int> addUser(UserInsertRequest userInsertRequest);
   Future<String> updateUser(UserUpdateRequest userUpdateRequest);
-  Future<String> deleteUser(dynamic id);
+  Future<String> deleteUser(dynamic id, List<int> roleList);
 
   //Ролевая политика
   Future<int> addUserRole(int userId, {roleId = 3});

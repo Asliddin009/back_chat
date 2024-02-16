@@ -21,6 +21,7 @@ final class NetRepo implements IRepo {
   @override
   Future<int> addUser(UserInsertRequest userInsertRequest) async {
     final id = await db.users.insertOne(userInsertRequest);
+    addUserRole(id);
     return id;
   }
 
@@ -31,8 +32,11 @@ final class NetRepo implements IRepo {
   }
 
   @override
-  Future<String> deleteUser(id) async {
+  Future<String> deleteUser(id, List<int> listRole) async {
     await db.users.deleteOne(id);
+    for (var idRole in listRole) {
+      db.roleUsers.deleteOne(idRole);
+    }
     return "successful";
   }
 

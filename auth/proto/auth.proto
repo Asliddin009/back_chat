@@ -12,6 +12,8 @@ service AuthRpc {
     rpc SignInSms (UserDto) returns (ResponseDto);
     rpc SendSms (RequestDto) returns (TokensDto);
     rpc AddRole (RoleDto) returns (ResponseDto);
+    rpc DeleteOtherUser (UserDto) returns(ResponseDto);
+    rpc UpdateOtherUser (UserDto) returns(ResponseDto);
 }
 
 message ListUserDto{

@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:auth/data/db.dart';
+import 'package:auth/data/intercetors/log_intercetors.dart';
 import 'package:auth/data/intercetors/role_intercetors.dart';
 import 'package:auth/data/intercetors/token_intercetors.dart';
 import 'package:auth/data/net_repo.dart';
@@ -15,7 +15,8 @@ Future<void> startServer() async {
       AuthRpc(NetRepo())
     ], interceptors: <Interceptor>[
       TokenIntercetors.tokenInterceptor,
-      RoleIntercetors.roleInterceptor
+      RoleIntercetors.roleInterceptor,
+      LogIntercetors.logInterceptor
     ], codecRegistry: CodecRegistry(codecs: [GzipCodec()]));
     await authServer.serve(port: Env.port);
     print("Сервер слушает порт: ${authServer.port}");

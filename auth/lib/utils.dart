@@ -14,15 +14,23 @@ abstract class Utils {
   }
 
   static int getIdFromToken(String token) {
-    final jwtClaim = verifyJwtHS256Signature(token, Env.sk);
-    final id = int.tryParse(jwtClaim['user_id']);
-    if (id == null) throw GrpcError.dataLoss("User id not found");
-    return id;
+    try {
+      final jwtClaim = verifyJwtHS256Signature(token, Env.sk);
+      final id = int.tryParse(jwtClaim['user_id']);
+      if (id == null) throw GrpcError.dataLoss("User id not found");
+      return id;
+    } on Exception catch (_) {
+      rethrow;
+    }
   }
 
   static getIdFromMetadata(ServiceCall serviceCall) {
-    final accessToken = serviceCall.clientMetadata?['token'] ?? "";
-    return getIdFromToken(accessToken);
+    try {
+      final accessToken = serviceCall.clientMetadata?['token'] ?? "";
+      return getIdFromToken(accessToken);
+    } on Exception catch (_) {
+      rethrow;
+    }
   }
 
   static UserDto getUserDtoFromUserVeiw(UserView user) {
@@ -62,9 +70,13 @@ abstract class Utils {
   }
 
   static List<String> convertStringToList(String input) {
-    input = input.substring(1, input.length - 1);
-    List<String> list = input.split(',');
-    return list;
+    try {
+      input = input.substring(1, input.length - 1);
+      List<String> list = input.split(',');
+      return list;
+    } on Exception catch (_) {
+      rethrow;
+    }
   }
 
   static ListUserDto parseUsers(List<UserView> users) {
@@ -74,5 +86,31 @@ abstract class Utils {
     } catch (error) {
       throw GrpcError.internal("Ошибка в методе parseUsers");
     }
+  }
+
+  static String convertDateTimeToString(DateTime dateTime) {
+    String year = dateTime.year.toString();
+
+    String month = dateTime.month.toString();
+    if (month.length == 1) {
+      month = '0$month';
+    }
+
+    String day = dateTime.day.toString();
+    if (day.length == 1) {
+      day = '0$day';
+    }
+
+    String hour = dateTime.hour.toString();
+    if (hour.length == 1) {
+      hour = '0$hour';
+    }
+
+    String minute = dateTime.minute.toString();
+    if (minute.length == 1) {
+      minute = '0$minute';
+    }
+    String ddmmyyyyhhmm = "$day.$month.$year $hour:$minute";
+    return ddmmyyyyhhmm;
   }
 }

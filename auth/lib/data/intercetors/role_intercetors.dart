@@ -6,35 +6,73 @@ import 'package:auth/env.dart';
 import 'package:auth/utils.dart';
 import 'package:grpc/grpc.dart';
 import 'package:jaguar_jwt/jaguar_jwt.dart';
-import 'package:stormberry/stormberry.dart';
 
-final _excludeMethods = [
-  'SignUp',
-  'SignIn',
-  'RefreshToken',
-  'SendSms',
-  'SignInSms'
+final _methodsForAdmin = [
+  'AddRole',
+];
+
+final _methodsWithCreatePermission = [
+  'AddRole',
+];
+
+final _methodsWithUpdatePermission = [
+  'UpdateOtherUser',
+];
+
+final _methodsWithReadPermission = [
+  'FetchUser',
+  'FindUser',
+];
+
+final _methodsWithDeletePermission = [
+  'DeleteOtherUser',
 ];
 
 abstract class RoleIntercetors {
   static FutureOr<GrpcError?> roleInterceptor(
       ServiceCall call, ServiceMethod serviceMethod) async {
     ckeckDatabase();
+    if (excludeMethods.contains(serviceMethod.name)) return null;
     final listId = getRoleFromMetadata(call);
-    final list =
-        await db.roles.queryRoles(QueryParams(where: "id = '${listId[0]}'"));
-    print("list = ${list}");
+    if (listId.contains('1') && _methodsForAdmin.contains(serviceMethod.name)) {
+      return null; //проверка на админа
+    }
     try {
-      return null;
-    } catch (error) {
+      for (var element in listId) {
+        print(element);
+        final role = await db.roles.queryRole(int.parse(element));
+        if (checkRole(role, serviceMethod)) return null;
+      }
       return GrpcError.permissionDenied('У вас не хватает прав');
+    } catch (error) {
+      return GrpcError.internal('ошибка при обработке роли');
     }
   }
 
   static List<String> getRoleFromMetadata(ServiceCall serviceCall) {
-    final accessToken = serviceCall.clientMetadata?['token'] ?? "";
-    final jwtClaim = verifyJwtHS256Signature(accessToken, Env.sk);
-    final listId = Utils.convertStringToList(jwtClaim['role_id']);
-    return listId;
+    try {
+      final accessToken = serviceCall.clientMetadata?['token'] ?? "";
+      final jwtClaim = verifyJwtHS256Signature(accessToken, Env.sk);
+      final listId = Utils.convertStringToList(jwtClaim['role_id']);
+      return listId;
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
+  static bool checkRole(RoleView? roleView, ServiceMethod method) {
+    if (_methodsWithUpdatePermission.contains(method.name)) {
+      return roleView!.isUpdate;
+    }
+    if (_methodsWithCreatePermission.contains(method.name)) {
+      return roleView!.isCreate;
+    }
+    if (_methodsWithReadPermission.contains(method.name)) {
+      return roleView!.isRead;
+    }
+    if (_methodsWithDeletePermission.contains(method.name)) {
+      return roleView!.isDelete;
+    }
+    return false;
   }
 }

@@ -36,7 +36,7 @@ class AuthRpc extends AuthRpcServiceBase {
     final user = await repo.feathUser(id);
     if (user == null) throw GrpcError.notFound("Пользователь не найден");
 
-    repo.deleteUser(id);
+    repo.deleteUser(id, user.roleList);
     return ResponseDto(message: "Пользователь удален");
   }
 
@@ -98,7 +98,6 @@ class AuthRpc extends AuthRpcServiceBase {
         email: request.email,
         password: Utils.getHastPassword(request.password),
       ));
-      repo.addUserRole(id, roleId: 3);
       return _createTokens(id.toString(), [3]);
     } catch (error) {
       log('$error');
@@ -218,12 +217,52 @@ class AuthRpc extends AuthRpcServiceBase {
     if (roles.isEmpty) {
       repo.addRole(RoleInsertRequest(
           name: request.roleName,
-          isCreate: request.isCreate ?? false,
-          isRead: request.isRead ?? false,
-          isUpdate: request.isUpdate ?? false,
-          isDelete: request.isDelete ?? false));
+          isCreate: request.isCreate,
+          isRead: request.isRead,
+          isUpdate: request.isUpdate,
+          isDelete: request.isDelete));
       return ResponseDto(message: "пользователю добавлена новая роль");
     }
     return ResponseDto(message: "пользователю добавлена роль");
+  }
+
+  @override
+  Future<ResponseDto> deleteOtherUser(ServiceCall call, UserDto request) async {
+    if (request.id.isEmpty) {
+      throw GrpcError.invalidArgument("id не найден");
+    }
+    final id = int.parse(request.id);
+    final user = await repo.feathUser(id);
+    if (user == null) throw GrpcError.notFound("Пользователь не найден");
+    try {
+      repo.deleteUser(id, user.roleList);
+      return ResponseDto(message: "Пользователь удален");
+    } on Exception catch (error, trace) {
+      throw GrpcError.internal(
+          'ошибка в методе deleteOtherUser: ${error.toString()}, trace: $trace');
+    }
+  }
+
+  @override
+  Future<ResponseDto> updateOtherUser(ServiceCall call, UserDto request) async {
+    if (request.id.isEmpty) {
+      throw GrpcError.invalidArgument("id не найден");
+    }
+    final id = int.parse(request.id);
+    try {
+      repo.updateUser(UserUpdateRequest(
+          id: id,
+          username: request.username.isEmpty ? null : request.username,
+          email: request.email.isEmpty ? null : request.email,
+          password: request.password.isEmpty
+              ? null
+              : Utils.getHastPassword(request.password)));
+      final user = await repo.feathUser(id);
+      if (user == null) throw GrpcError.notFound("Что то пошло не так");
+      return ResponseDto(message: "пользователь обновлен");
+    } on Exception catch (error, trace) {
+      throw GrpcError.internal(
+          'ошибка в методе updateOtherUser: ${error.toString()}, trace: $trace');
+    }
   }
 }

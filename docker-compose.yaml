@@ -19,6 +19,7 @@ services:
       ACCESS_TOKEN_LIFE: 100
       REFRESH_TOKEN_LIFE: 200
       AUTH_SMS_PORT: ${AUTH_SMS_PORT}
+      COUNT_SESSION: ${count_session}
       
   auth_sms:
     container_name: auth_sms

@@ -1,5 +1,5 @@
-import 'package:auth/data/role/role.dart';
-import 'package:auth/data/user/user.dart';
+import 'package:auth/data/entity/role/role.dart';
+import 'package:auth/data/entity/user/user.dart';
 import 'package:stormberry/stormberry.dart';
 
 part "role_user.schema.dart";

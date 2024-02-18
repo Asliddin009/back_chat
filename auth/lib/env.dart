@@ -8,4 +8,5 @@ abstract class Env {
       int.parse(Platform.environment['ACCESS_TOKEN_LIFE']!);
   static int refreshTokenLife =
       int.parse(Platform.environment['REFRESH_TOKEN_LIFE']!);
+  static int countSession = int.parse(Platform.environment['COUNT_SESSION']!);
 }

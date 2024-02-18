@@ -21,5 +21,5 @@ abstract class User {
   String? get lastName;
   String? get code;
   String? get codeLife;
-  List<int> get roleList;
+  List<String> get listToken;
 }

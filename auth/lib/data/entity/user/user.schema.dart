@@ -41,14 +41,12 @@ class _UserRepository extends BaseRepository
     if (requests.isEmpty) return [];
     var values = QueryValues();
     var rows = await db.query(
-      'INSERT INTO "users" ( "username", "role_list", "email", "password", "phone", "avatar", "first_name", "last_name", "code", "code_life" )\n'
-      'VALUES ${requests.map((r) => '( ${values.add(r.username)}:text, ${values.add(r.roleList)}:_int8, ${values.add(r.email)}:text, ${values.add(r.password)}:text, ${values.add(r.phone)}:text, ${values.add(r.avatar)}:text, ${values.add(r.firstName)}:text, ${values.add(r.lastName)}:text, ${values.add(r.code)}:text, ${values.add(r.codeLife)}:text )').join(', ')}\n'
+      'INSERT INTO "users" ( "username", "list_token", "email", "password", "phone", "avatar", "first_name", "last_name", "code", "code_life" )\n'
+      'VALUES ${requests.map((r) => '( ${values.add(r.username)}:text, ${values.add(r.listToken)}:_text, ${values.add(r.email)}:text, ${values.add(r.password)}:text, ${values.add(r.phone)}:text, ${values.add(r.avatar)}:text, ${values.add(r.firstName)}:text, ${values.add(r.lastName)}:text, ${values.add(r.code)}:text, ${values.add(r.codeLife)}:text )').join(', ')}\n'
       'RETURNING "id"',
       values.values,
     );
-    var result = rows
-        .map<int>((r) => TextEncoder.i.decode(r.toColumnMap()['id']))
-        .toList();
+    var result = rows.map<int>((r) => TextEncoder.i.decode(r.toColumnMap()['id'])).toList();
 
     return result;
   }
@@ -59,9 +57,9 @@ class _UserRepository extends BaseRepository
     var values = QueryValues();
     await db.query(
       'UPDATE "users"\n'
-      'SET "username" = COALESCE(UPDATED."username", "users"."username"), "role_list" = COALESCE(UPDATED."role_list", "users"."role_list"), "email" = COALESCE(UPDATED."email", "users"."email"), "password" = COALESCE(UPDATED."password", "users"."password"), "phone" = COALESCE(UPDATED."phone", "users"."phone"), "avatar" = COALESCE(UPDATED."avatar", "users"."avatar"), "first_name" = COALESCE(UPDATED."first_name", "users"."first_name"), "last_name" = COALESCE(UPDATED."last_name", "users"."last_name"), "code" = COALESCE(UPDATED."code", "users"."code"), "code_life" = COALESCE(UPDATED."code_life", "users"."code_life")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.username)}:text::text, ${values.add(r.roleList)}:_int8::_int8, ${values.add(r.email)}:text::text, ${values.add(r.password)}:text::text, ${values.add(r.phone)}:text::text, ${values.add(r.avatar)}:text::text, ${values.add(r.firstName)}:text::text, ${values.add(r.lastName)}:text::text, ${values.add(r.code)}:text::text, ${values.add(r.codeLife)}:text::text )').join(', ')} )\n'
-      'AS UPDATED("id", "username", "role_list", "email", "password", "phone", "avatar", "first_name", "last_name", "code", "code_life")\n'
+      'SET "username" = COALESCE(UPDATED."username", "users"."username"), "list_token" = COALESCE(UPDATED."list_token", "users"."list_token"), "email" = COALESCE(UPDATED."email", "users"."email"), "password" = COALESCE(UPDATED."password", "users"."password"), "phone" = COALESCE(UPDATED."phone", "users"."phone"), "avatar" = COALESCE(UPDATED."avatar", "users"."avatar"), "first_name" = COALESCE(UPDATED."first_name", "users"."first_name"), "last_name" = COALESCE(UPDATED."last_name", "users"."last_name"), "code" = COALESCE(UPDATED."code", "users"."code"), "code_life" = COALESCE(UPDATED."code_life", "users"."code_life")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.username)}:text::text, ${values.add(r.listToken)}:_text::_text, ${values.add(r.email)}:text::text, ${values.add(r.password)}:text::text, ${values.add(r.phone)}:text::text, ${values.add(r.avatar)}:text::text, ${values.add(r.firstName)}:text::text, ${values.add(r.lastName)}:text::text, ${values.add(r.code)}:text::text, ${values.add(r.codeLife)}:text::text )').join(', ')} )\n'
+      'AS UPDATED("id", "username", "list_token", "email", "password", "phone", "avatar", "first_name", "last_name", "code", "code_life")\n'
       'WHERE "users"."id" = UPDATED."id"',
       values.values,
     );
@@ -71,7 +69,7 @@ class _UserRepository extends BaseRepository
 class UserInsertRequest {
   UserInsertRequest({
     required this.username,
-    required this.roleList,
+    required this.listToken,
     this.email,
     this.password,
     this.phone,
@@ -83,7 +81,7 @@ class UserInsertRequest {
   });
 
   final String username;
-  final List<int> roleList;
+  final List<String> listToken;
   final String? email;
   final String? password;
   final String? phone;
@@ -98,7 +96,7 @@ class UserUpdateRequest {
   UserUpdateRequest({
     required this.id,
     this.username,
-    this.roleList,
+    this.listToken,
     this.email,
     this.password,
     this.phone,
@@ -111,7 +109,7 @@ class UserUpdateRequest {
 
   final int id;
   final String? username;
-  final List<int>? roleList;
+  final List<String>? listToken;
   final String? email;
   final String? password;
   final String? phone;
@@ -140,7 +138,7 @@ class UserViewQueryable extends KeyedViewQueryable<UserView, int> {
   UserView decode(TypedMap map) => UserView(
       id: map.get('id'),
       username: map.get('username'),
-      roleList: map.getListOpt('role_list') ?? const [],
+      listToken: map.getListOpt('list_token') ?? const [],
       email: map.getOpt('email'),
       password: map.getOpt('password'),
       phone: map.getOpt('phone'),
@@ -155,7 +153,7 @@ class UserView {
   UserView({
     required this.id,
     required this.username,
-    required this.roleList,
+    required this.listToken,
     this.email,
     this.password,
     this.phone,
@@ -168,7 +166,7 @@ class UserView {
 
   final int id;
   final String username;
-  final List<int> roleList;
+  final List<String> listToken;
   final String? email;
   final String? password;
   final String? phone;

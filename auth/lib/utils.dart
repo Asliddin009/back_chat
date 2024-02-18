@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:auth/data/user/user.dart';
+import 'package:auth/data/entity/user/user.dart';
 import 'package:auth/env.dart';
 import 'package:auth/generated/auth.pbgrpc.dart';
 import 'package:crypto/crypto.dart';

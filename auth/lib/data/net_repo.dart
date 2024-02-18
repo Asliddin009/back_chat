@@ -1,6 +1,7 @@
-import 'package:auth/data/role/role.dart';
-import 'package:auth/data/role_user/role_user.dart';
-import 'package:auth/data/user/user.dart';
+import 'package:auth/data/entity/log/log.dart';
+import 'package:auth/data/entity/role/role.dart';
+import 'package:auth/data/entity/role_user/role_user.dart';
+import 'package:auth/data/entity/user/user.dart';
 import 'package:auth/domain/repository.dart';
 import 'package:auth/data/db.dart';
 import 'package:stormberry/stormberry.dart';
@@ -21,7 +22,6 @@ final class NetRepo implements IRepo {
   @override
   Future<int> addUser(UserInsertRequest userInsertRequest) async {
     final id = await db.users.insertOne(userInsertRequest);
-    addUserRole(id);
     return id;
   }
 
@@ -32,19 +32,20 @@ final class NetRepo implements IRepo {
   }
 
   @override
-  Future<String> deleteUser(id, List<int> listRole) async {
+  Future<String> deleteUser(id) async {
     await db.users.deleteOne(id);
-    for (var idRole in listRole) {
-      db.roleUsers.deleteOne(idRole);
-    }
     return "successful";
   }
 
   @override
   Future<int> addUserRole(int userId, {roleId = 3}) async {
-    final id = await db.roleUsers
-        .insertOne(RoleUserInsertRequest(roleId: roleId, userId: userId));
-    return id;
+    try {
+      final id = await db.roleUsers
+          .insertOne(RoleUserInsertRequest(roleId: roleId, userId: userId));
+      return id;
+    } on Exception catch (_) {
+      rethrow;
+    }
   }
 
   @override
@@ -57,5 +58,11 @@ final class NetRepo implements IRepo {
   Future<int> addRole(RoleInsertRequest roleInsertRequest) async {
     final id = await db.roles.insertOne(roleInsertRequest);
     return id;
+  }
+
+  @override
+  Future<List<LogView>> feathLogs(QueryParams params) async {
+    final list = await db.logs.queryLogs(params);
+    return list;
   }
 }

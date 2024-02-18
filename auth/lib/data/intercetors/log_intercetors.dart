@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:auth/data/db.dart';
 import 'package:auth/data/intercetors/check_db.dart';
-import 'package:auth/data/log/log.dart';
+import 'package:auth/data/entity/log/log.dart';
 import 'package:auth/utils.dart';
 import 'package:grpc/grpc.dart';
 

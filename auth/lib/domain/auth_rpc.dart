@@ -1,8 +1,6 @@
-import 'dart:developer';
 import 'dart:isolate';
-
-import 'package:auth/data/role/role.dart';
-import 'package:auth/data/user/user.dart';
+import 'package:auth/data/entity/role/role.dart';
+import 'package:auth/data/entity/user/user.dart';
 import 'package:auth/domain/repository.dart';
 import 'package:auth/env.dart';
 import 'package:auth/generated/auth_sms.pbgrpc.dart';
@@ -36,7 +34,7 @@ class AuthRpc extends AuthRpcServiceBase {
     final user = await repo.feathUser(id);
     if (user == null) throw GrpcError.notFound("Пользователь не найден");
 
-    repo.deleteUser(id, user.roleList);
+    repo.deleteUser(id);
     return ResponseDto(message: "Пользователь удален");
   }
 
@@ -56,7 +54,7 @@ class AuthRpc extends AuthRpcServiceBase {
     final id = Utils.getIdFromToken(request.refreshToken);
     final user = await repo.feathUser(id);
     if (user == null) throw GrpcError.notFound("User not found");
-    return _createTokens(user.id.toString(), user.roleList);
+    return _createTokens(user.id.toString());
   }
 
   @override
@@ -77,7 +75,7 @@ class AuthRpc extends AuthRpcServiceBase {
     if (hashPassword != user.password) {
       throw GrpcError.unauthenticated("Неправельный пароль");
     }
-    return _createTokens(user.id.toString(), user.roleList);
+    return _createTokens(user.id.toString());
   }
 
   @override
@@ -93,15 +91,16 @@ class AuthRpc extends AuthRpcServiceBase {
     }
     try {
       final id = await repo.addUser(UserInsertRequest(
-        roleList: [3],
+        listToken: [],
         username: request.username,
         email: request.email,
         password: Utils.getHastPassword(request.password),
       ));
-      return _createTokens(id.toString(), [3]);
-    } catch (error) {
-      log('$error');
-      throw GrpcError.notFound("Такой пользователь уже существует");
+      final idRole = await repo.addUserRole(id, roleId: 3);
+      return _createTokens(id.toString());
+    } catch (error, trace) {
+      throw GrpcError.internal(
+          'ошибка в методе signUp: ${error.toString()}, trace: $trace');
     }
   }
 
@@ -120,8 +119,9 @@ class AuthRpc extends AuthRpcServiceBase {
     return Utils.getUserDtoFromUserVeiw(user);
   }
 
-  TokensDto _createTokens(String id, List<int> roleListId) {
-    final roleId = Utils.convertListToString(roleListId);
+  TokensDto _createTokens(String id) {
+    //todo
+    final roleId = Utils.convertListToString([]);
     final accessTokenSet = JwtClaim(
         maxAge: Duration(hours: Env.accessTokenLife),
         otherClaims: {'user_id': id, 'role_id': roleId});
@@ -199,7 +199,10 @@ class AuthRpc extends AuthRpcServiceBase {
       throw GrpcError.unauthenticated(
           "Вы ввели неправильный или недействительный код");
     }
-    return _createTokens(users[0].id.toString(), users[0].roleList);
+    repo.updateUser(UserUpdateRequest(id: users[0].id, code: ''));
+    return _createTokens(
+      users[0].id.toString(),
+    );
   }
 
   String getRandomUsername() => UsernameGenerator().generateRandom();
@@ -235,7 +238,7 @@ class AuthRpc extends AuthRpcServiceBase {
     final user = await repo.feathUser(id);
     if (user == null) throw GrpcError.notFound("Пользователь не найден");
     try {
-      repo.deleteUser(id, user.roleList);
+      repo.deleteUser(id);
       return ResponseDto(message: "Пользователь удален");
     } on Exception catch (error, trace) {
       throw GrpcError.internal(
@@ -264,5 +267,14 @@ class AuthRpc extends AuthRpcServiceBase {
       throw GrpcError.internal(
           'ошибка в методе updateOtherUser: ${error.toString()}, trace: $trace');
     }
+  }
+
+  @override
+  Future<ResponseDto> getAllLogs(ServiceCall call, UserDto request) async {
+    final key = " ";
+    final query = "username LIKE '%$key%'";
+    final list = repo.feathLogs(QueryParams(where: query));
+
+    return ResponseDto(message: list.toString());
   }
 }

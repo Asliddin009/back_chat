@@ -14,7 +14,8 @@ service AuthRpc {
     rpc AddRole (RoleDto) returns (ResponseDto);
     rpc DeleteOtherUser (UserDto) returns(ResponseDto);
     rpc UpdateOtherUser (UserDto) returns(ResponseDto);
-    rpc getAllLogs (UserDto) returns(ResponseDto);
+    rpc GetAllLogs (UserDto) returns(ResponseDto);
+    rpc RecallToken (TokensDto) returns (ResponseDto); 
 }
 
 message ListUserDto{

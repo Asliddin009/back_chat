@@ -4,7 +4,7 @@ import 'package:stormberry/stormberry.dart';
 part 'session.schema.dart';
 
 @Model()
-abstract class Session {
+abstract class SessionUser {
   @PrimaryKey()
   @AutoIncrement()
   int get id;

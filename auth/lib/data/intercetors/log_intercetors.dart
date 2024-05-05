@@ -6,23 +6,30 @@ import 'package:auth/data/entity/log/log.dart';
 import 'package:auth/utils.dart';
 import 'package:grpc/grpc.dart';
 
+final excludeMethods = [
+  'SignUp',
+  'SignIn',
+  'RefreshToken',
+  'SendSms',
+  'SignInSms',
+  'RecallToken'
+];
+
 abstract class LogIntercetors {
   static FutureOr<GrpcError?> logInterceptor(
-      ServiceCall call, ServiceMethod serviceMethod) {
+      ServiceCall call, ServiceMethod serviceMethod) async {
     ckeckDatabase();
     try {
       final callDate = Utils.convertDateTimeToString(DateTime.now());
-      int userId;
+      String userId;
       if (excludeMethods.contains(serviceMethod.name)) {
-        userId = 0;
+        userId = 'Не авторизован';
       } else {
-        userId = Utils.getIdFromToken(call.clientMetadata?['token'] ?? "");
+        userId = Utils.getIdFromToken(call.clientMetadata?['token'] ?? "")
+            .toString();
       }
-      print('test');
-      db.logs.insertOne(LogInsertRequest(
+      await db.logs.insertOne(LogInsertRequest(
           userId: userId, method: serviceMethod.name, callDate: callDate));
-      print('test2');
-
       return null;
     } catch (error) {
       return GrpcError.unauthenticated('ошибка логирования');

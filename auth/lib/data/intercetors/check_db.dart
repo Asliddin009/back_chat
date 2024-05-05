@@ -11,5 +11,6 @@ final excludeMethods = [
   'SignIn',
   'RefreshToken',
   'SendSms',
-  'SignInSms'
+  'SignInSms',
+  'RecallToken'
 ];

@@ -42,7 +42,7 @@ class _LogRepository extends BaseRepository
     var values = QueryValues();
     var rows = await db.query(
       'INSERT INTO "logs" ( "user_id", "method", "call_date" )\n'
-      'VALUES ${requests.map((r) => '( ${values.add(r.userId)}:int8, ${values.add(r.method)}:text, ${values.add(r.callDate)}:text )').join(', ')}\n'
+      'VALUES ${requests.map((r) => '( ${values.add(r.userId)}:text, ${values.add(r.method)}:text, ${values.add(r.callDate)}:text )').join(', ')}\n'
       'RETURNING "id"',
       values.values,
     );
@@ -58,7 +58,7 @@ class _LogRepository extends BaseRepository
     await db.query(
       'UPDATE "logs"\n'
       'SET "user_id" = COALESCE(UPDATED."user_id", "logs"."user_id"), "method" = COALESCE(UPDATED."method", "logs"."method"), "call_date" = COALESCE(UPDATED."call_date", "logs"."call_date")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.userId)}:int8::int8, ${values.add(r.method)}:text::text, ${values.add(r.callDate)}:text::text )').join(', ')} )\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.userId)}:text::text, ${values.add(r.method)}:text::text, ${values.add(r.callDate)}:text::text )').join(', ')} )\n'
       'AS UPDATED("id", "user_id", "method", "call_date")\n'
       'WHERE "logs"."id" = UPDATED."id"',
       values.values,
@@ -73,7 +73,7 @@ class LogInsertRequest {
     required this.callDate,
   });
 
-  final int userId;
+  final String userId;
   final String method;
   final String callDate;
 }
@@ -87,7 +87,7 @@ class LogUpdateRequest {
   });
 
   final int id;
-  final int? userId;
+  final String? userId;
   final String? method;
   final String? callDate;
 }
@@ -123,7 +123,7 @@ class LogView {
   });
 
   final int id;
-  final int userId;
+  final String userId;
   final String method;
   final String callDate;
 }

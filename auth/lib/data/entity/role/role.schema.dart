@@ -41,8 +41,8 @@ class _RoleRepository extends BaseRepository
     if (requests.isEmpty) return [];
     var values = QueryValues();
     var rows = await db.query(
-      'INSERT INTO "roles" ( "name", "is_create", "is_read", "is_update", "is_delete" )\n'
-      'VALUES ${requests.map((r) => '( ${values.add(r.name)}:text, ${values.add(r.isCreate)}:boolean, ${values.add(r.isRead)}:boolean, ${values.add(r.isUpdate)}:boolean, ${values.add(r.isDelete)}:boolean )').join(', ')}\n'
+      'INSERT INTO "roles" ( "user_id", "role" )\n'
+      'VALUES ${requests.map((r) => '( ${values.add(r.userId)}:int8, ${values.add(r.role)}:text )').join(', ')}\n'
       'RETURNING "id"',
       values.values,
     );
@@ -57,9 +57,9 @@ class _RoleRepository extends BaseRepository
     var values = QueryValues();
     await db.query(
       'UPDATE "roles"\n'
-      'SET "name" = COALESCE(UPDATED."name", "roles"."name"), "is_create" = COALESCE(UPDATED."is_create", "roles"."is_create"), "is_read" = COALESCE(UPDATED."is_read", "roles"."is_read"), "is_update" = COALESCE(UPDATED."is_update", "roles"."is_update"), "is_delete" = COALESCE(UPDATED."is_delete", "roles"."is_delete")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.name)}:text::text, ${values.add(r.isCreate)}:boolean::boolean, ${values.add(r.isRead)}:boolean::boolean, ${values.add(r.isUpdate)}:boolean::boolean, ${values.add(r.isDelete)}:boolean::boolean )').join(', ')} )\n'
-      'AS UPDATED("id", "name", "is_create", "is_read", "is_update", "is_delete")\n'
+      'SET "user_id" = COALESCE(UPDATED."user_id", "roles"."user_id"), "role" = COALESCE(UPDATED."role", "roles"."role")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.userId)}:int8::int8, ${values.add(r.role)}:text::text )').join(', ')} )\n'
+      'AS UPDATED("id", "user_id", "role")\n'
       'WHERE "roles"."id" = UPDATED."id"',
       values.values,
     );
@@ -68,36 +68,24 @@ class _RoleRepository extends BaseRepository
 
 class RoleInsertRequest {
   RoleInsertRequest({
-    required this.name,
-    required this.isCreate,
-    required this.isRead,
-    required this.isUpdate,
-    required this.isDelete,
+    required this.userId,
+    this.role,
   });
 
-  final String name;
-  final bool isCreate;
-  final bool isRead;
-  final bool isUpdate;
-  final bool isDelete;
+  final int userId;
+  final String? role;
 }
 
 class RoleUpdateRequest {
   RoleUpdateRequest({
     required this.id,
-    this.name,
-    this.isCreate,
-    this.isRead,
-    this.isUpdate,
-    this.isDelete,
+    this.userId,
+    this.role,
   });
 
   final int id;
-  final String? name;
-  final bool? isCreate;
-  final bool? isRead;
-  final bool? isUpdate;
-  final bool? isDelete;
+  final int? userId;
+  final String? role;
 }
 
 class RoleViewQueryable extends KeyedViewQueryable<RoleView, int> {
@@ -108,8 +96,10 @@ class RoleViewQueryable extends KeyedViewQueryable<RoleView, int> {
   String encodeKey(int key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "roles".*'
-      'FROM "roles"';
+  String get query => 'SELECT "roles".*, row_to_json("user".*) as "user"'
+      'FROM "roles"'
+      'LEFT JOIN (${UserViewQueryable().query}) "user"'
+      'ON "roles"."user_id" = "user"."id"';
 
   @override
   String get tableAlias => 'roles';
@@ -117,27 +107,18 @@ class RoleViewQueryable extends KeyedViewQueryable<RoleView, int> {
   @override
   RoleView decode(TypedMap map) => RoleView(
       id: map.get('id'),
-      name: map.get('name'),
-      isCreate: map.get('is_create'),
-      isRead: map.get('is_read'),
-      isUpdate: map.get('is_update'),
-      isDelete: map.get('is_delete'));
+      user: map.get('user', UserViewQueryable().decoder),
+      role: map.getOpt('role'));
 }
 
 class RoleView {
   RoleView({
     required this.id,
-    required this.name,
-    required this.isCreate,
-    required this.isRead,
-    required this.isUpdate,
-    required this.isDelete,
+    required this.user,
+    this.role,
   });
 
   final int id;
-  final String name;
-  final bool isCreate;
-  final bool isRead;
-  final bool isUpdate;
-  final bool isDelete;
+  final UserView user;
+  final String? role;
 }

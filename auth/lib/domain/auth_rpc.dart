@@ -1,5 +1,5 @@
 import 'dart:isolate';
-import 'package:auth/data/entity/role/role.dart';
+import 'package:auth/data/entity/session/session.dart';
 import 'package:auth/data/entity/user/user.dart';
 import 'package:auth/domain/repository.dart';
 import 'package:auth/env.dart';
@@ -8,7 +8,6 @@ import 'package:auth/utils.dart';
 import 'package:grpc/grpc.dart';
 import 'package:jaguar_jwt/jaguar_jwt.dart';
 import 'package:stormberry/stormberry.dart';
-import 'package:username_generator/username_generator.dart';
 
 import '../generated/auth.pbgrpc.dart';
 
@@ -75,7 +74,9 @@ class AuthRpc extends AuthRpcServiceBase {
     if (hashPassword != user.password) {
       throw GrpcError.unauthenticated("Неправельный пароль");
     }
-    return _createTokens(user.id.toString());
+    final token = await _createTokens(user.id.toString());
+    checkSession(user.id, token);
+    return token;
   }
 
   @override
@@ -90,17 +91,17 @@ class AuthRpc extends AuthRpcServiceBase {
       throw GrpcError.invalidArgument('Username not found');
     }
     try {
-      final id = await repo.addUser(UserInsertRequest(
-        listToken: [],
+      var id = await repo.addUser(UserInsertRequest(
         username: request.username,
         email: request.email,
         password: Utils.getHastPassword(request.password),
       ));
-      final idRole = await repo.addUserRole(id, roleId: 3);
-      return _createTokens(id.toString());
-    } catch (error, trace) {
-      throw GrpcError.internal(
-          'ошибка в методе signUp: ${error.toString()}, trace: $trace');
+      print("test");
+      final token = await _createTokens(id.toString());
+      checkSession(id, token);
+      return token;
+    } on Exception catch (_) {
+      throw GrpcError.unavailable('пользователь уже зарегестрирован');
     }
   }
 
@@ -119,20 +120,24 @@ class AuthRpc extends AuthRpcServiceBase {
     return Utils.getUserDtoFromUserVeiw(user);
   }
 
-  TokensDto _createTokens(String id) {
-    //todo
-    final roleId = Utils.convertListToString([]);
-    final accessTokenSet = JwtClaim(
-        maxAge: Duration(hours: Env.accessTokenLife),
-        otherClaims: {'user_id': id, 'role_id': roleId});
-    final refreshTokenSet = JwtClaim(
-        maxAge: Duration(hours: Env.refreshTokenLife),
-        otherClaims: {'user_id': id, 'role_id': roleId});
+  ///создать токен
+  Future<TokensDto> _createTokens(
+    String id,
+  ) async {
+    final accessTokenSet =
+        JwtClaim(maxAge: Duration(minutes: Env.accessTokenLife), otherClaims: {
+      'user_id': id,
+    });
+    final refreshTokenSet =
+        JwtClaim(maxAge: Duration(minutes: Env.refreshTokenLife), otherClaims: {
+      'user_id': id,
+    });
     return TokensDto(
         accessToken: issueJwtHS256(accessTokenSet, Env.sk),
         refreshToken: issueJwtHS256(refreshTokenSet, Env.sk));
   }
 
+  ///Найти пользвателя
   @override
   Future<ListUserDto> findUser(ServiceCall call, FindDto request) async {
     final offset = int.tryParse(request.offset) ?? 0;
@@ -145,6 +150,7 @@ class AuthRpc extends AuthRpcServiceBase {
     return await Isolate.run(() => Utils.parseUsers(listUsers));
   }
 
+  ///Авторизация по смс
   @override
   Future<ResponseDto> signInSms(ServiceCall call, UserDto request) async {
     if (request.email.isEmpty) {
@@ -171,6 +177,7 @@ class AuthRpc extends AuthRpcServiceBase {
     }
   }
 
+  ///Проверка пароля
   void checkPassword(UserDto request, List<UserView> users) {
     final hashPassword = Utils.getHastPassword(request.password);
     if (hashPassword != users[0].password) {
@@ -178,6 +185,7 @@ class AuthRpc extends AuthRpcServiceBase {
     }
   }
 
+  ///Проверка код из почты
   @override
   Future<TokensDto> sendSms(ServiceCall call, RequestDto request) async {
     if (request.code.isEmpty) {
@@ -200,13 +208,14 @@ class AuthRpc extends AuthRpcServiceBase {
           "Вы ввели неправильный или недействительный код");
     }
     repo.updateUser(UserUpdateRequest(id: users[0].id, code: ''));
-    return _createTokens(
+    final token = await _createTokens(
       users[0].id.toString(),
     );
+    checkSession(users[0].id, token);
+    return token;
   }
 
-  String getRandomUsername() => UsernameGenerator().generateRandom();
-
+  ///Добавление пользователя
   @override
   Future<ResponseDto> addRole(ServiceCall call, RoleDto request) async {
     if (request.userId.isEmpty) {
@@ -215,28 +224,30 @@ class AuthRpc extends AuthRpcServiceBase {
     if (request.roleName.isEmpty) {
       throw GrpcError.invalidArgument("roleName не найден");
     }
-    final roles = await repo
-        .feathRoles(QueryParams(limit: 1, where: "name='${request.roleName}'"));
-    if (roles.isEmpty) {
-      repo.addRole(RoleInsertRequest(
-          name: request.roleName,
-          isCreate: request.isCreate,
-          isRead: request.isRead,
-          isUpdate: request.isUpdate,
-          isDelete: request.isDelete));
-      return ResponseDto(message: "пользователю добавлена новая роль");
+    try {
+      final userId = int.parse(request.userId);
+      final res = await repo.addRole(userId, request.roleName);
+      return ResponseDto(message: res);
+    } catch (error, trace) {
+      throw GrpcError.internal(
+          'ошибка в методе addRole: ${error.toString()}, trace: $trace');
     }
-    return ResponseDto(message: "пользователю добавлена роль");
   }
 
+  ///Удаление другого пользователя
   @override
   Future<ResponseDto> deleteOtherUser(ServiceCall call, UserDto request) async {
     if (request.id.isEmpty) {
       throw GrpcError.invalidArgument("id не найден");
     }
-    final id = int.parse(request.id);
-    final user = await repo.feathUser(id);
+    final userDeleteId = int.parse(request.id);
+    final user = await repo.feathUser(userDeleteId);
     if (user == null) throw GrpcError.notFound("Пользователь не найден");
+    final id = Utils.getIdFromMetadata(call);
+    final rolePermission = await checkRole('deleteUser', id);
+    if (rolePermission == false) {
+      throw GrpcError.unauthenticated('У вас нет прав');
+    }
     try {
       repo.deleteUser(id);
       return ResponseDto(message: "Пользователь удален");
@@ -246,22 +257,32 @@ class AuthRpc extends AuthRpcServiceBase {
     }
   }
 
+  Future<bool> checkRole(String role, int userId) async {
+    final listRole = await repo.feathUserRoles(userId);
+    if (listRole.isEmpty) return false;
+    return listRole.contains(role);
+  }
+
+  ///Обновление другого пользователя
   @override
   Future<ResponseDto> updateOtherUser(ServiceCall call, UserDto request) async {
     if (request.id.isEmpty) {
       throw GrpcError.invalidArgument("id не найден");
     }
-    final id = int.parse(request.id);
+    final userUpdateId = int.parse(request.id);
+    final id = Utils.getIdFromMetadata(call);
+    final rolePermission = await checkRole('updateUser', id);
+    if (rolePermission == false) {
+      throw GrpcError.unauthenticated('У вас нет прав');
+    }
     try {
       repo.updateUser(UserUpdateRequest(
-          id: id,
+          id: userUpdateId,
           username: request.username.isEmpty ? null : request.username,
           email: request.email.isEmpty ? null : request.email,
           password: request.password.isEmpty
               ? null
               : Utils.getHastPassword(request.password)));
-      final user = await repo.feathUser(id);
-      if (user == null) throw GrpcError.notFound("Что то пошло не так");
       return ResponseDto(message: "пользователь обновлен");
     } on Exception catch (error, trace) {
       throw GrpcError.internal(
@@ -269,6 +290,7 @@ class AuthRpc extends AuthRpcServiceBase {
     }
   }
 
+  ///Получение всех логов
   @override
   Future<ResponseDto> getAllLogs(ServiceCall call, UserDto request) async {
     final key = " ";
@@ -276,5 +298,44 @@ class AuthRpc extends AuthRpcServiceBase {
     final list = repo.feathLogs(QueryParams(where: query));
 
     return ResponseDto(message: list.toString());
+  }
+
+  ///Проверка сессии
+  void checkSession(int userId, TokensDto token) async {
+    final session = await repo.feathSession(userId);
+    if (session == null) {
+      await repo.createSession(SessionUserInsertRequest(
+          userId: userId, listToken: [token.accessToken]));
+      return null;
+    }
+    if (session.listToken.length < Env.countSession) {
+      final list = session.listToken..add(token.accessToken);
+      await repo.updateSession(SessionUserUpdateRequest(
+          id: session.id, userId: userId, listToken: list));
+      print("сессия обновлена");
+    } else {
+      final list = session.listToken.sublist(1, session.listToken.length)
+        ..add(token.accessToken);
+      await repo.updateSession(SessionUserUpdateRequest(
+          id: session.id, userId: userId, listToken: list));
+      print("сессия обновлена самая старая сессия теперь не активна");
+    }
+  }
+
+  ///Отозвать все токены
+  @override
+  Future<ResponseDto> recallToken(ServiceCall call, TokensDto request) async {
+    if (request.accessToken.isEmpty) {
+      throw GrpcError.notFound("accessToken not found");
+    }
+    final id = Utils.getIdFromToken(request.accessToken);
+    final session = await repo.feathSession(id);
+    if (session == null) {
+      throw GrpcError.unauthenticated("не найдено сессий с этим токеном");
+    }
+    await repo.updateSession(SessionUserUpdateRequest(
+        id: session.id, listToken: [request.accessToken]));
+    return ResponseDto(
+        message: "все токены отозваны, кроме ${request.accessToken}");
   }
 }

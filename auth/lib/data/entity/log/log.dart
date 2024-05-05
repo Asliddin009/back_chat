@@ -7,7 +7,7 @@ abstract class Log {
   @PrimaryKey()
   @AutoIncrement()
   int get id;
-  int get userId;
+  String get userId;
   String get method;
   String get callDate;
 }

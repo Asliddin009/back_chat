@@ -3,45 +3,45 @@
 part of 'session.dart';
 
 extension SessionRepositories on Database {
-  SessionRepository get sessions => SessionRepository._(this);
+  SessionUserRepository get sessionUsers => SessionUserRepository._(this);
 }
 
-abstract class SessionRepository
+abstract class SessionUserRepository
     implements
         ModelRepository,
-        KeyedModelRepositoryInsert<SessionInsertRequest>,
-        ModelRepositoryUpdate<SessionUpdateRequest>,
+        KeyedModelRepositoryInsert<SessionUserInsertRequest>,
+        ModelRepositoryUpdate<SessionUserUpdateRequest>,
         ModelRepositoryDelete<int> {
-  factory SessionRepository._(Database db) = _SessionRepository;
+  factory SessionUserRepository._(Database db) = _SessionUserRepository;
 
-  Future<SessionView?> querySession(int id);
-  Future<List<SessionView>> querySessions([QueryParams? params]);
+  Future<SessionUserView?> querySessionUser(int id);
+  Future<List<SessionUserView>> querySessionUsers([QueryParams? params]);
 }
 
-class _SessionRepository extends BaseRepository
+class _SessionUserRepository extends BaseRepository
     with
-        KeyedRepositoryInsertMixin<SessionInsertRequest>,
-        RepositoryUpdateMixin<SessionUpdateRequest>,
+        KeyedRepositoryInsertMixin<SessionUserInsertRequest>,
+        RepositoryUpdateMixin<SessionUserUpdateRequest>,
         RepositoryDeleteMixin<int>
-    implements SessionRepository {
-  _SessionRepository(super.db) : super(tableName: 'sessions', keyName: 'id');
+    implements SessionUserRepository {
+  _SessionUserRepository(super.db) : super(tableName: 'session_users', keyName: 'id');
 
   @override
-  Future<SessionView?> querySession(int id) {
-    return queryOne(id, SessionViewQueryable());
+  Future<SessionUserView?> querySessionUser(int id) {
+    return queryOne(id, SessionUserViewQueryable());
   }
 
   @override
-  Future<List<SessionView>> querySessions([QueryParams? params]) {
-    return queryMany(SessionViewQueryable(), params);
+  Future<List<SessionUserView>> querySessionUsers([QueryParams? params]) {
+    return queryMany(SessionUserViewQueryable(), params);
   }
 
   @override
-  Future<List<int>> insert(List<SessionInsertRequest> requests) async {
+  Future<List<int>> insert(List<SessionUserInsertRequest> requests) async {
     if (requests.isEmpty) return [];
     var values = QueryValues();
     var rows = await db.query(
-      'INSERT INTO "sessions" ( "user_id", "list_token" )\n'
+      'INSERT INTO "session_users" ( "user_id", "list_token" )\n'
       'VALUES ${requests.map((r) => '( ${values.add(r.userId)}:int8, ${values.add(r.listToken)}:_text )').join(', ')}\n'
       'RETURNING "id"',
       values.values,
@@ -52,22 +52,22 @@ class _SessionRepository extends BaseRepository
   }
 
   @override
-  Future<void> update(List<SessionUpdateRequest> requests) async {
+  Future<void> update(List<SessionUserUpdateRequest> requests) async {
     if (requests.isEmpty) return;
     var values = QueryValues();
     await db.query(
-      'UPDATE "sessions"\n'
-      'SET "user_id" = COALESCE(UPDATED."user_id", "sessions"."user_id"), "list_token" = COALESCE(UPDATED."list_token", "sessions"."list_token")\n'
+      'UPDATE "session_users"\n'
+      'SET "user_id" = COALESCE(UPDATED."user_id", "session_users"."user_id"), "list_token" = COALESCE(UPDATED."list_token", "session_users"."list_token")\n'
       'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.userId)}:int8::int8, ${values.add(r.listToken)}:_text::_text )').join(', ')} )\n'
       'AS UPDATED("id", "user_id", "list_token")\n'
-      'WHERE "sessions"."id" = UPDATED."id"',
+      'WHERE "session_users"."id" = UPDATED."id"',
       values.values,
     );
   }
 }
 
-class SessionInsertRequest {
-  SessionInsertRequest({
+class SessionUserInsertRequest {
+  SessionUserInsertRequest({
     required this.userId,
     required this.listToken,
   });
@@ -76,8 +76,8 @@ class SessionInsertRequest {
   final List<String> listToken;
 }
 
-class SessionUpdateRequest {
-  SessionUpdateRequest({
+class SessionUserUpdateRequest {
+  SessionUserUpdateRequest({
     required this.id,
     this.userId,
     this.listToken,
@@ -88,7 +88,7 @@ class SessionUpdateRequest {
   final List<String>? listToken;
 }
 
-class SessionViewQueryable extends KeyedViewQueryable<SessionView, int> {
+class SessionUserViewQueryable extends KeyedViewQueryable<SessionUserView, int> {
   @override
   String get keyName => 'id';
 
@@ -96,23 +96,23 @@ class SessionViewQueryable extends KeyedViewQueryable<SessionView, int> {
   String encodeKey(int key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "sessions".*, row_to_json("user".*) as "user"'
-      'FROM "sessions"'
+  String get query => 'SELECT "session_users".*, row_to_json("user".*) as "user"'
+      'FROM "session_users"'
       'LEFT JOIN (${UserViewQueryable().query}) "user"'
-      'ON "sessions"."user_id" = "user"."id"';
+      'ON "session_users"."user_id" = "user"."id"';
 
   @override
-  String get tableAlias => 'sessions';
+  String get tableAlias => 'session_users';
 
   @override
-  SessionView decode(TypedMap map) => SessionView(
+  SessionUserView decode(TypedMap map) => SessionUserView(
       id: map.get('id'),
       user: map.get('user', UserViewQueryable().decoder),
       listToken: map.getListOpt('list_token') ?? const []);
 }
 
-class SessionView {
-  SessionView({
+class SessionUserView {
+  SessionUserView({
     required this.id,
     required this.user,
     required this.listToken,

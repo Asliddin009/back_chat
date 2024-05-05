@@ -70,8 +70,12 @@ class AuthRpcClient extends $grpc.Client {
       ($0.UserDto value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.ResponseDto.fromBuffer(value));
   static final _$getAllLogs = $grpc.ClientMethod<$0.UserDto, $0.ResponseDto>(
-      '/AuthRpc/getAllLogs',
+      '/AuthRpc/GetAllLogs',
       ($0.UserDto value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.ResponseDto.fromBuffer(value));
+  static final _$recallToken = $grpc.ClientMethod<$0.TokensDto, $0.ResponseDto>(
+      '/AuthRpc/RecallToken',
+      ($0.TokensDto value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.ResponseDto.fromBuffer(value));
 
   AuthRpcClient($grpc.ClientChannel channel,
@@ -130,6 +134,10 @@ class AuthRpcClient extends $grpc.Client {
 
   $grpc.ResponseFuture<$0.ResponseDto> getAllLogs($0.UserDto request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$getAllLogs, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.ResponseDto> recallToken($0.TokensDto request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$recallToken, request, options: options);
   }
 }
 
@@ -223,11 +231,18 @@ abstract class AuthRpcServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) => $0.UserDto.fromBuffer(value),
         ($0.ResponseDto value) => value.writeToBuffer()));
     $addMethod($grpc.ServiceMethod<$0.UserDto, $0.ResponseDto>(
-        'getAllLogs',
+        'GetAllLogs',
         getAllLogs_Pre,
         false,
         false,
         ($core.List<$core.int> value) => $0.UserDto.fromBuffer(value),
+        ($0.ResponseDto value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.TokensDto, $0.ResponseDto>(
+        'RecallToken',
+        recallToken_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.TokensDto.fromBuffer(value),
         ($0.ResponseDto value) => value.writeToBuffer()));
   }
 
@@ -283,6 +298,10 @@ abstract class AuthRpcServiceBase extends $grpc.Service {
     return getAllLogs(call, await request);
   }
 
+  $async.Future<$0.ResponseDto> recallToken_Pre($grpc.ServiceCall call, $async.Future<$0.TokensDto> request) async {
+    return recallToken(call, await request);
+  }
+
   $async.Future<$0.TokensDto> signIn($grpc.ServiceCall call, $0.UserDto request);
   $async.Future<$0.TokensDto> signUp($grpc.ServiceCall call, $0.UserDto request);
   $async.Future<$0.TokensDto> refreshToken($grpc.ServiceCall call, $0.TokensDto request);
@@ -296,4 +315,5 @@ abstract class AuthRpcServiceBase extends $grpc.Service {
   $async.Future<$0.ResponseDto> deleteOtherUser($grpc.ServiceCall call, $0.UserDto request);
   $async.Future<$0.ResponseDto> updateOtherUser($grpc.ServiceCall call, $0.UserDto request);
   $async.Future<$0.ResponseDto> getAllLogs($grpc.ServiceCall call, $0.UserDto request);
+  $async.Future<$0.ResponseDto> recallToken($grpc.ServiceCall call, $0.TokensDto request);
 }

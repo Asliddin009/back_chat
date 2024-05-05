@@ -224,6 +224,11 @@ class AuthRpc extends AuthRpcServiceBase {
     if (request.roleName.isEmpty) {
       throw GrpcError.invalidArgument("roleName не найден");
     }
+    final id = Utils.getIdFromMetadata(call);
+    final rolePermission = await checkRole('admin', id);
+    if (rolePermission == false) {
+      throw GrpcError.unauthenticated("У вас нет прав");
+    }
     try {
       final userId = int.parse(request.userId);
       final res = await repo.addRole(userId, request.roleName);

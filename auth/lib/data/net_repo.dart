@@ -73,8 +73,15 @@ final class NetRepo implements IRepo {
             .insertOne(RoleInsertRequest(userId: userId, role: newRole));
         return 'пользователю добавлена новая роль';
       } else {
+        final oldRole = res[0].role;
+        late final String finishRole;
+        if (newRole == 'admin') {
+          finishRole = "$newRole,$oldRole";
+        } else {
+          finishRole = "$oldRole,$newRole";
+        }
         await db.roles
-            .updateOne(RoleUpdateRequest(id: res[0].id, role: newRole));
+            .updateOne(RoleUpdateRequest(id: res[0].id, role: finishRole));
         return 'пользователю добавлена роль';
       }
     } on Exception catch (_) {
